@@ -1,24 +1,12 @@
-# You can learn more about package authoring with RStudio at:
-#
-#   http://r-pkgs.had.co.nz/
-#
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Build and Reload Package:  'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
-#   Test Package:              'Ctrl + Shift + T'
-
 #' Hamiltonian Monte Carlo
 #'
-#' @param theta.start Initial value.
-#' @param epsilon Leapfrog step size.
-#' @param L Length of the leapfrog step.
-#' @param logDensity Logarithm of the joint density of the variables theta.
-#' @param M Number of iterations.
+#' @param theta.start a p-dimensional vector with the initial value for each parameter.
+#' @param epsilon a non-negative value specifying the leapfrog step size.
+#' @param L an integer number specifying the length of the leapfrog step.
+#' @param logDensity a function that computes the logarithm of the joint density of the variables.
+#' @param M an integer specifying the number of iterations.
 #'
-#' @return This function returns an object of type ... .  Each row is a sample from the joint density.
-#'
-#'
+#' @return This function returns a matrix which m-th row is a sample from the joint density.
 
 hmc.nograd <- function(theta.start, epsilon, L, logDensity, dlogDensity, M) {
 
@@ -29,7 +17,6 @@ hmc.nograd <- function(theta.start, epsilon, L, logDensity, dlogDensity, M) {
     return(list(theta.tilde = theta.tilde, r.tilde = r.tilde))
   }
 
-  #require(mvtnorm)
   p <- length(theta.start)
   outcome <- list(theta = matrix(theta.start, nrow = M+1, ncol = p, byrow = T), r = matrix(NA, nrow = M+1, ncol = p))##, dimnames[[2]] = paste("Iteration ",1:M))
   for (m in 2:(M+1)) {
@@ -63,20 +50,21 @@ hmc <- function(theta.start, epsilon, L=5, logDensity, M) {
     return(list(theta.tilde = theta.tilde, r.tilde = r.tilde, grad.logDens.tilde = grad(logDensity,theta.tilde)))
   }
 
-  require(mvtnorm)
   p <- length(theta.start)
-  outcome <- list(theta = matrix(theta.start, nrow = M, ncol = p, byrow = T), r = matrix(NA, nrow = M, ncol = p))##, dimnames[[2]] = paste("Iteration ",1:M))
-  for (m in 2:M) {
-    r0 <- rmvnorm(1, mean = rep(0,p), sigma = diag(p))
+  outcome <- list(theta = matrix(theta.start, nrow = M+1, ncol = p, byrow = T), r = matrix(NA, nrow = M+1, ncol = p))##, dimnames[[2]] = paste("Iteration ",1:M))
+  for (m in 2:(M+1)) {
+    r0 <- rnorm(p,  0, sd = 1)
     outcome$theta[m, ] <- outcome$theta[m-1, ]
     proposal <- list(theta.tilde = outcome$theta[m-1, ], r.tilde = r0)
-    for (i in 1:L)  proposal <- leapfrog(proposal$theta.tilde, proposal$r.tilde, epsilon, logDensity)[1:2]
-    alpha <- min(1, with(proposal,exp(logDensity(theta.tilde) - 1/2 * crossprod(r.tilde) - logDensity(outcome$theta[m-1, ]) - 1/2 * crossprod(r0))))
+    for (i in 1:L)  {
+      proposal <- leapfrog(proposal$theta.tilde, proposal$r.tilde, epsilon, logDensity)[1:2]
+    }
+    alpha <- min(1, with(proposal,exp(logDensity(theta.tilde) - 1/2 * crossprod(r.tilde) - logDensity(outcome$theta[m-1, ]) + 1/2 * crossprod(r0))))
     if (runif(1) <= alpha){
       outcome$theta[m,] <- proposal$theta.tilde
       outcome$r[m, ] <- - proposal$r.tilde
-      }
     }
-  return(outcome$theta)
+  }
+  return(outcome$theta[-1,])
 }
 
