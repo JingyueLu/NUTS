@@ -20,6 +20,9 @@ StopCon(theta.minus, theta.plus, r.minus, r.plus)
 
 \item{r.plus}{the leftmost position of a subtree}
 }
+\value{
+1 if the stopping criterion is met by the subtree; 0 if the stopping criterion is not by the subtree
+}
 \description{
 StopCon
 
