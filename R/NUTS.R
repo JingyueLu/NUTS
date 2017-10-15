@@ -1,3 +1,4 @@
+# GIVE REFERENCES
 # Generic form
 '%=%' = function(l, r, ...) UseMethod('%=%')
 
@@ -18,21 +19,6 @@
   }
 }
 
-# Used if LHS is larger than RHS
-extendToMatch <- function(source, destin) {
-  s <- length(source)
-  d <- length(destin)
-
-  # Assume that destin is a length when it is a single number and source is not
-  if(d==1 && s>1 && !is.null(as.numeric(destin)))
-    d <- destin
-
-  dif <- d - s
-  if (dif > 0) {
-    source <- rep(source, ceiling(d/s))[1:d]
-  }
-  return (source)
-}
 
 # Grouping the left hand side
 g = function(...) {
@@ -55,12 +41,13 @@ g = function(...) {
 #'
 Leapfrog <- function(theta, r, epsilon, L){
   g(trivial,grad.theta) %=% L(theta)
-  r.tilde <- r+ 0.5*epsilon*grad.theta
-  theta.tilde <- theta + epsilon*r.tilde
+  #grad.theta is a vector
+  r.tilde <- r+ 0.5*epsilon*grad.theta   #r.tilde is a vector
+  theta.tilde <- theta + epsilon*r.tilde  #theta.tilde is a vector
   g(log.tilde, grad.tilde) %=% L(theta.tilde)
   r.tilde <- r.tilde + 0.5*epsilon*grad.tilde
 
-  return(theta.tilde, r.tilde, log.theta)
+  return(list(theta.tilde, r.tilde, log.tilde))
 
 }
 
@@ -81,7 +68,7 @@ BuildTree <- function(theta, r,u,v, j, epsilon, L, joint0) {
   if (j==0){
     # Base case -- take one leapfrog step in the direction v
     g(theta.prime, r.prime, log.prime) %=% Leapfrog(theta, r, v*epsilon, L)
-    temp <-log.prime - 0.5*(r.prime %*% r.prime)
+    temp <-log.prime - 0.5*(crossprod(r.prime, r.prime))
     # Checking whether the newly visted state is in the slice
     n.prime <- as.numeric(I(log(u)<temp))
     # Checking whether the simulation is moderately accurate
@@ -89,7 +76,7 @@ BuildTree <- function(theta, r,u,v, j, epsilon, L, joint0) {
 
     alpha.prime <- min(1, exp(temp-joint0))
     n.alphaprime <- 1
-    return(theta.prime,r.prime,theta.prime,r.prime,theta.prime, n.prime, s.prime, alpha.prime, n.alphaprime, log.prime )
+    return(list(theta.prime,r.prime,theta.prime,r.prime,theta.prime, n.prime, s.prime, alpha.prime, n.alphaprime, log.prime ))
   }
 
   else {
@@ -114,7 +101,7 @@ BuildTree <- function(theta, r,u,v, j, epsilon, L, joint0) {
       alpha.prime <- alpha.prime + alpha.prime2
       n.alphaprime <- n.alphaprime + n.alphaprime2
     }
-    return(theta.minus, r.minus, theta.plus, r.plus, theta.prime, n.prime, s.prime, alpha.prime, n.alphaprime, log.prime )
+    return(list(theta.minus, r.minus, theta.plus, r.plus, theta.prime, n.prime, s.prime, alpha.prime, n.alphaprime, log.prime ))
 
   }
 }
@@ -130,8 +117,8 @@ BuildTree <- function(theta, r,u,v, j, epsilon, L, joint0) {
 #'
 StopCon <-function(theta.minus, theta.plus, r.minus,r.plus){
   theta.diff <- theta.plus - theta.minus
-  temp1 <- as.numeric(theta.diff %*% r.minus)
-  temp2 <- as.numeric(theta.diff %*% r.plus)
+  temp1 <- as.numeric(crossprod(theta.diff,r.minus))
+  temp2 <- as.numeric(crossprod(theta.diff, r.plus))
   return (temp1*temp2)
 }
 
@@ -148,21 +135,23 @@ StopCon <-function(theta.minus, theta.plus, r.minus,r.plus){
 #' Heuristic for choosing an initial value of epsilon
 #'
 FindReasonableEpsilon <- function(theta,log.start, grad.start, L){
-  epsilon <- 1
+  epsilon <- 0.5
   r = rnorm(length(theta))
   g(theta.prime, r.prime, log.prime) %=% Leapfrog(theta,r,epsilon, L)
 
   #Modifications may be needed. Initial epsilon is fairly large (Speed up possible?).
 
   #Computing the ratio of p(theta.prime, r.prime) over p(theta, r)
-  tempratio <- exp(log.prime-0.5*(r.prime %*% r.prime) - log.start + 0.5*(r %*% r))
+  tempratio <- exp(log.prime-0.5*(crossprod(r.prime, r.prime)) - log.start + 0.5*(crossprod(r, r)))
   a <- 2* as.numeric(tempratio > 0.5)-1
+  #print(c(tempratio, a))
 
   while (tempratio^a > 2^(-a) ){
-    epsilon <-  epsilon * (2^(-a))
+    epsilon <-  epsilon * (2^(a))
     g(theta.prime, r.prime, log.prime) %=% Leapfrog(theta,r,epsilon, L)
-    tempratio <- exp(log.prime - 0.5*(r.prime %*% r.prime) - log.start + 0.5*(r %*% r))
-  }
+    tempratio <- exp(log.prime - 0.5*(crossprod(r.prime, r.prime)) - log.start + 0.5*(crossprod(r, r)))
+    #print(tempratio)
+    }
   return(epsilon)
 
 }
@@ -185,39 +174,41 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
 
   # Set up output structure: each theta is an array
   # samples is a matrix of size M x length(theta)
-  samples <- matrix(, nrow = Madapt + M, ncol = length(theta0) )
-  samples[1, ] <- theta0
+  out <- matrix(0 , nrow = Madapt + M, ncol = length(theta0) )
+  out[1, ] <- theta0
 
   # Find a reasonable initial value of epsilon using heuristic
-  g(log.temp, grad0) %=% L(theta.start)
-  epsilon0 =  find_reasonable_epsilon(theta0, log.temp, grad0, L)
+  g(log.temp, grad0) %=% L(theta0)
+  epsilon =  FindReasonableEpsilon(theta0, log.temp, grad0, L)
 
   # Setting up other parameters for dual averaging
-  mu <- log(10*epsilon0)
+  mu <- log(10*epsilon)
   epsilon.bar <- 1
   H.bar <- 0
   gamma = 0.05
   t0 = 10
   kappa = 0.75
 
-  for(m in 1:Madapt+M){
+  for(m in 2:Madapt+M){
     r0 <- rnorm(length(theta0))
-
     #resample u (logtemp updated each iteration)
-    ratio.temp <- log.temp - 0.5*r0 %*% r0
+    ratio.temp <- log.temp - 0.5*crossprod(r0, r0)
     u = runif(1, min=0, max= exp(ratio.temp))
+    joint0 <- ratio.temp
 
     #Setting up initial parameters for BuildTree
-    theta.minus <- samples[m-1, ]
-    theta.plus <- samples[m-1, ]
+    theta.minus <- out[m-1, ]
+    theta.plus <- out[m-1, ]
     r.minus <- r0
     r.plus <- r0
-    samples[m, ] <- samples[m-1, ]
+    out[m, ] <- out[m-1, ]
 
     j <- 0
     n <- 1
     s <- 1
 
+
+    print(m)
     # Build Subtrees
     while(s==1){
       #Choose a direction : forward direction (+1), backward (-1)
@@ -232,7 +223,7 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
       }
 
       if (s.prime==1 & runif(1)< min(1, n.prime/n) ) {
-        samples[m, ] = theta.prime
+        out[m, ] = theta.prime
         log.temp = log.prime
       }
       n <- n+ n.prime
@@ -253,12 +244,17 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
       epsilon <- epsilonbar
     }
 
-    return(samples[Madapt+1:M+Madapt , ])
-
-
   }
+   return(out[Madapt+1:M+Madapt , ])
 
 }
+
+
+#testing two-dimensional multivariate normal
+
+#Setting up callable function L
+
+
 
 
 

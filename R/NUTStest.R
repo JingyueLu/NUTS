@@ -1,8 +1,21 @@
-# GIVE REFERENCES
-# Generic form
+#' %=%
+#'
+#' The function is copied from "https://strugglingthroughproblems.wordpress.com/2010/08/27/matlab-style-multiple-assignment-in%C2%A0r/" and is used for multiple assignment
+#' @param l		the list on the left-hand side
+#' @param r 	the list on the right-hand side
+#'
+#' @example
+#' g(a,b) = list(c(3,5,6),4)
+#'
 '%=%' = function(l, r, ...) UseMethod('%=%')
 
-# Binary Operator
+#' %=%,lbunch
+#'
+#' The function is copied from "https://strugglingthroughproblems.wordpress.com/2010/08/27/matlab-style-multiple-assignment-in%C2%A0r/"
+#' It is a specific implementation for the generic %=%
+#' @param l		the list on the left-hand side
+#' @param r 	the list on the right-hand side
+#'
 '%=%.lbunch' = function(l, r, ...) {
   Envir = as.environment(-1)
 
@@ -20,7 +33,12 @@
 }
 
 
-# Grouping the left hand side
+#' g
+#'
+#' The function is copied from "https://strugglingthroughproblems.wordpress.com/2010/08/27/matlab-style-multiple-assignment-in%C2%A0r/".
+#' This function grabs '...' part without evaluating it (so pass by name)
+#'
+#'
 g = function(...) {
   List = as.list(substitute(list(...)))[-1L]
   class(List) = 'lbunch'
@@ -30,21 +48,21 @@ g = function(...) {
 
 #' Leapfrog
 #'
+#' This function perform a leapfrog step. This function is a modified version of Leapfrog in the paper. It returns etra values: log posterior value and gradient of log posterior at the new position theta.tilde
+#'
 #' @param theta		starting position
 #' @param r 	starting momentum
 #' @param epsilon 	step size
 #' @param L 	callable function: returns the value of log posterior and the gradient of log posterior prbability at given input
 #'
-#' @output theta.tilde
+#' @return the list of updated theta, r and the log posterior value at the updated point
 #'
-#' This function perform a leapfrog step. This function is a modified version of Leapfrog in the paper. It returns etra values: log posterior value and gradient of log posterior at the new position theta.tilde
 #' @example
 
 Leapfrog <- function(theta, r, epsilon, L){
   g(trivial,grad.theta) %=% L(theta)
-  #grad.theta is a vector
-  r.tilde <- r+ 0.5*epsilon*grad.theta   #r.tilde is a vector
-  theta.tilde <- theta + epsilon*r.tilde  #theta.tilde is a vector
+  r.tilde <- r+ 0.5*epsilon*grad.theta
+  theta.tilde <- theta + epsilon*r.tilde
   g(log.tilde, grad.tilde) %=% L(theta.tilde)
   r.tilde <- r.tilde + 0.5*epsilon*grad.tilde
 
@@ -55,15 +73,17 @@ Leapfrog <- function(theta, r, epsilon, L){
 
 #' Build trees
 #'
-#' @param theta
-#' @param r
-#' @param u
-#' @param v
+#' This function builds the tree for NUTS
+#'
+#' @param theta starting position
+#' @param r starting momentum
+#' @param u a slice variable, which is used to simplify the implementation
+#' @param v a randomly generated value, which is used to determine the direction of movement
 #' @param j the height of a tree
 #' @param epsilon step size
 #' @param joint0 	to avoid computing the same value repeatedly, we compute joint0=log0- 0.5*(r0 %*% r0) beforehand and take this value as an input for the BUildTree function
 #'
-#' This function builds the tree for NUTS
+#' @return a list of variables. It includes updated leftmost and rightmost states. It also returns updated values which are used to improve memory efficience.
 #'
 BuildTree <- function(theta, r,u,v, j, epsilon, L, joint0) {
   if (j==0){
@@ -110,12 +130,14 @@ BuildTree <- function(theta, r,u,v, j, epsilon, L, joint0) {
 
 #' StopCon
 #'
-#' @param theta.minus
-#' @param theta.plus
-#' @param r.minus
-#' @param r.plus
+#'#' This function computes the U-Turn stopping condition, which is used in NUTS and BuildTree functions
 #'
-#' This function computes the U-Turn stopping condition, which is used in NUTS and BuildTree functions
+#' @param theta.minus the leftmost position of a subtree
+#' @param theta.plus the rightmost position of a subtree
+#' @param r.minus the leftmost momentum of a subtree
+#' @param r.plus the leftmost position of a subtree
+#'
+#' @return  1 if the stopping criterion is met by the subtree; 0 if the stopping criterion is not by the subtree
 #'
 StopCon <-function(theta.minus, theta.plus, r.minus,r.plus){
   theta.diff <- theta.plus - theta.minus
@@ -127,21 +149,20 @@ StopCon <-function(theta.minus, theta.plus, r.minus,r.plus){
 
 #' FindReasonableEpsilon
 #'
+#' Heuristic for choosing an initial value of epsilon
+#'
 #' @param theta
 #' @param log.start the log posterior value at initial state
 #' @param grad.start the gradient value at initial state
 #' @param L callable function needed in Leapfrog
 #'
-#' @return epsilon
+#' @return initial epsilon
 #'
-#' Heuristic for choosing an initial value of epsilon
 #'
 FindReasonableEpsilon <- function(theta,log.start, L){
   epsilon <- 1
   r = rnorm(length(theta))
   g(theta.prime, r.prime, log.prime) %=% Leapfrog(theta,r,epsilon, L)
-
-  #Modifications may be needed. Initial epsilon is fairly large (Speed up possible?).
 
   #Computing the ratio of p(theta.prime, r.prime) over p(theta, r)
   tempratio <- exp(log.prime-0.5*(crossprod(r.prime, r.prime)) - log.start + 0.5*(crossprod(r, r)))
@@ -161,16 +182,17 @@ FindReasonableEpsilon <- function(theta,log.start, L){
 
 #' NutsDual
 #'
+#' This function implements No-U-Turn Sampler with Dual Averaging.
+#' The code is a modified version of algorithm6 in paper. Instead of including samples in burn-in period (m < Madapt), the function generates a sample where samples in the burn-in period are discarded.
+#'
 #' @param theta0	inital state of theta
 #' @param delta 	the desired average acceptance probability
 #' @param L 	a callable function that returns log probability
 #' @param M 	number of samples to generate
 #' @param Madapt	number of iterations
 #'
-#' This function implements No-U-Turn Sampler with Dual Averaging.
-#' The code is a modified version of algorithm6 in paper. Instead of including samples in burn-in period (m < Madapt), the function generates a sample where samples in the burn-in period are discarded.
 #'
-#' @return samples
+#' @return samples generated by NUTS
 
 NutsDual <- function(theta0, delta, L, M, Madapt){
 
@@ -254,9 +276,8 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
 }
 
 
-#testing two-dimensional multivariate normal
 
-#Setting up callable function L
+
 
 
 
