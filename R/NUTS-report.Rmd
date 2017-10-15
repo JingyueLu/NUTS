@@ -1,0 +1,89 @@
+---
+title: "The No-U-Turn Sampler"
+author: Jingyue Lu and Marco Palma
+output: pdf_document
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+This project investigates the No-U-Turn Sampler (NUTS). M.D. Hoffman and A. Gelman. introduced NUTS in 2011 as an extension to Hamiltonian Monte Carlo (HMC) algorithm. Using Hamiltonian Dynamics, HMC avoids simple random work behaviour by proposing distant proposals for Metropolis algorithm, thereby converging to high-dimensional target distributions at a much faster speed than other general methods. However, the performance of HMC depends heavily on two tuning parameters: the trajectory length and the stepsize. A poor choice of these two parameters will lead to drastic decrease of the performance of HMC. NUTS is designed to specifically address the problem of tuning the trajectory length. In this project, we start by briefly introducing the ideas behind of HMC and NUTS. A short theoretical foundation for both algorithms is also included. Both HMC and NUTS are implemented in R to compare the performances between these two methods. Especially, we are interested in how effective NUTS is in handling the barriers of HMC.
+
+## HMC
+HMC and Dual Averaging
+
+
+## NUTS
+In this section, we introduce NUTS to address the problem of tuning the trajectory length $L$. NUTS is a method that builds upon HMC. Unlike HMC, which sets a fixed trajectory length $L$ for all proposals, NUTS dynamically chooses $L$ for each proposal using the idea of No-U-Turn. In short, to decide the length $L$ for a proposal, NUTS repeatedly doubles the length of the current trajectory until increasing $L$ no longer leads to an increased distance between the initial $\theta$ and a newly proposed $\tilde{\theta}$. That is, the $\tilde{\theta}$ makes a "U-turn". 
+
+### Derivation of simplified NUTS algorithm
+The derivation of NUTS algorithm can be divided into two parts: the conditions NUTS algorithm has to satisfy in order to be theoretically sound and the stopping criteria NUTS uses to stop the doubling procedure.
+
+To simplify the deriviation of NUTS, Hoffman and Gelman introduced a slice vairable $u$. Simplified NUTS considers the augmented model
+$$p(\theta,r,u)\propto\mathbb{I}[u\in[0,\exp\{\mathcal{L}-\frac{1}{2}r\cdot r\}]],$$
+where $\mathbb{I}[\cdot]$ is 1 if $u\in [0,\exp\{\mathcal{L}-\frac{1}{2}r\cdot r\}$ is true and 0 otherwise. The useful results of introducing a slice variable $u$ are that the conditional probabilities $p(u|\theta,r) \sim \text{Unif}(u;[0, \exp\{\mathcal{L}(\theta)-\frac{1}{2}r\cdot r\}])$ and $p(\theta,r|u) \sim \text{Unif}(\theta', r' | \exp\{\mathcal{L}(\theta)-\frac{1}{2}r\cdot r\}\geq u)$ are both uniform and hence can be easily simulated
+
+In terms of theoretical requirements for simplified NUTS algorithm, it is required that the algorithm must not only leave the target distrbution invariant but also guarantee the time reversibility. Under several not too strict conditions, NUTS uses the following procedure to sample $\theta^{t+1}$ from $\theta^{t}$ to achieve invariant target distribution:
+
+1. sample $r\sim\mathcal{N}(0,I)$,  
+2. sample $u\sim\text{Unif}([0,\exp\{\mathcal{L}(\theta^t)-\frac{1}{2}r\cdot{r}\}])$,  
+3. sample $\mathcal{B}$, $\mathcal{C}$ from their conditional distribution $p(\mathcal{B},\mathcal{C}|\theta^t,r,u,\epsilon)$,  
+4. sample $\theta^{t+1}$, $r$ uniformly from the set $\mathcal{C}$. 
+
+Here, $\mathcal{C}$ is a set of candidate position-momentum states while $\mathcal{B}$ is the set of all position-momentum states that computed by leapfrod integrator during each NUTS iteration. Clearly, $\mathcal{C}\subseteq\mathcal{B}$. For the purpose of this project, we omit the proof of the validity of the procedure but only state the key observations and results. We first point out that steps 1,2,3 constitute a valid Gibbs sampling update for $r$, $u$, $\mathcal{B}$, $\mathcal{C}$. Secondly, the construction of the distribution $p(\mathcal{B},\mathcal{C}|\theta^t,r,u,\epsilon)$ relies on the strategy employed by NUTS to achieve time reversibility and will be introduced later. Thirdly and lastly, as a result of the prequiresites of the above procedure, we use the following condition to determine whether a state in $\mathcal{B}$ is also in $\mathcal{C}$: 
+
+**Condition One:**    
+$$(\theta',r')\in\mathcal{C},\qquad \text{if}\quad u\leq \exp\{\mathcal{L}(\theta')-\frac{1}{2}r'\cdot r'\}.$$
+
+We now consider the time reversibility requirement. Time reversibility is important as it ensures the algorithm converge to the correct distribution. NUTS uses a recursive algorithm to preserve time reversibility. Recall that, to find a trajectory length for each NUTS interation, NUTS doubles the current trajectory repeatedly until an u-turn is encountered. To simulate forward and backward movement in time, during each doubling, NUTS allows the new subtrajectory to start from either the leftmost or rightmost point of the old trajectory and use leapfrog to trace a path either running backwards or forwards respectively. The proccess continues until stopping criteria are met. To illustrate, we assume the starting point is $(\theta_0^1,r)$, where the subscript is the number of step and the superscript is the index of the point in that step. ALso, let $v\in\{1,-1\}$. $v$ is randomly choosen in each step to present the direction of movement. We are only interested in the path for $\theta$.
+
+**Step j=1:   ** (v= 1)  $\theta_0^1 \rightarrow \theta_1^1.$  
+**Step j=2:   ** (v= 1)  $\theta_0^1 \rightarrow \theta_1^1 \rightarrow \theta_2^1 \rightarrow \theta_2^2.$  
+**Step j=3:   ** (v=-1)  $\theta_3^4\leftarrow\theta_3^3\leftarrow\theta_3^2\leftarrow \theta_3^1\leftarrow\theta_0^1 \rightarrow \theta_1^1 \rightarrow \theta_2^1 \rightarrow \theta_2^2.$ 
+
+In the example above, we build a three-step path. We can also think the path after each step j as a binary tree of height j, so final path is a binary tree of height 3  
+$$\underbrace{\underbrace{\underbrace{\theta_3^4\leftarrow\theta_3^3}_{\text{level }1}\leftarrow\underbrace{\theta_3^2\leftarrow \theta_3^1}_{\text{level }1}}_{\text{level }2}\leftarrow\underbrace{\underbrace{\theta_0^1 \rightarrow \theta_1^1}_{\text{level }1} \rightarrow \underbrace{\theta_2^1 \rightarrow \theta_2^2}_{\text{level }1}}_{\text{level }2}}_{\text{level }3}.$$
+
+Finally, we discuss the stopping criteria used in NUTS. A straightforwd and essential stopping condition for NUTS implements the idea of no u-turn. We observe that when $\tilde{\theta}$ makes a U-turn, the derivative, with respect to time, of half the squared distance (half is chosen to simplify calculations) between $\theta$ and $\tilde{\theta}$ should be less than 0. Mathematically, we have
+$$
+\frac{d}{dt}\frac{(\tilde{\theta}-\theta)\cdot (\tilde{\theta}-\theta)}{2} = (\tilde{\theta}-\theta)\cdot\frac{d}{dt}(\tilde{\theta}-\theta)= (\tilde{\theta}-\theta)\cdot r < 0.$$ 
+Thus, the NUTS algorithm stops when: 
+
+**Condition Two:** 
+$$(\theta_{end}-\theta_{start})\cdot r < 0.$$
+The condition is checked for each subtree and also for the whole tree. Other than the stopping condition for u-turn, NUTS also stops expanding $\mathcal{B}$ when any newly discovered states in the continuing process are likely to have near 0 probability to be $\mathcal{C}$ . To formulate, NUTS develops the following condition based on Condition One:   
+
+**Condition Three:**  
+The algorithm stops when
+$$\mathcal{L}(\theta) -\frac{1}{2}r\cdot r -\log u > -\Delta_{max}.$$
+
+In NUTS, $\Delta_{max}$ is set to 1000, so the algorithm continuos as long as the simulation is moderately accurate.
+
+So far, we have addressed all aspects needed for deriving the simplified NUTS algorithm. We summarise the simiplified NUTS algorithm below. 
+
+*To sample for a point $\tilde{\theta}$, we run the following NUTS iteration with a given $\theta_0^1$:* 
+
+1. Resample $r\sim\mathcal{N}(0,I)$.  
+2. Resample $u\sim\text{Unif}([0,\exp\{\mathcal{L}(\theta^t)-\frac{1}{2}r\cdot r\}])$.  
+%j is the number of doubling steps we take to build a trajectory path.  
+%s is an indicator variable. It becomes 0 when a stopping criterion is met.
+3. Initialisee $j=0$, $s=1$, $\mathcal{C}=\{(\theta_0^1,r)\}$.  
+%Set the rightmost (+) and leftmost (-) points of the trajectory path.  
+4. Initialise $\theta^{+}=\theta_0^0$,$\theta^{-}=\theta_0^0$.   
+5. **while** s=1 do   
+    1. Build a binary tree of height j   
+        1. For each new node: check Condition One to determine whether or not to add the new node into $\mathcal{C}$.  
+        2. For each new node: check Condition Three. If Condition Three is met, set $s=0$.  
+        3. For each subtree: check Condition Two. If Condition Two is met, set $s=0$.  
+    2. For the newly generated whole path:  
+        1. Update $\theta^{+}$ and $\theta^{-}$ to be the rightmost and leftmost point of the whole path.  
+        2. Check Condition Two. If it is met, set $s=0$.  
+        #Update variables for while loop   
+    3. j= j+1  
+6. Sample $\tilde{\theta}$ uniformly from $\mathcal{C}$.  
+
+### Efficient NUTS
+Simplified NUTS algorithm need to evaluate log posterior probability and its gradient at $2^j-1$ points apart from $O(2^j)$ operations to check the stopping criteria (Hoffman and Gelman, 2011). Furthermore, the final doubling iteration continues even when a stopping criterion is met in the middle of the process. In terms of memory, simplifed NUTS requires to store $2^j$ states to perform uniform sampling at the end. These facts seriously deterioate the efficiency of NUTS. The second issue can be easily solved by terminating the excucation of the recrusion once $s$ becomes $0$. Hoffman and Gelman (2011) prosposed a solution for reducing the meomery requirment from $O(2^j)$ to $O(j)$. The key idea of this memory reduction is to use a more sophisticated transition kernal and to exploit the binary tree structure of the trajectory path. We refer interested reader to Hoffman and Gelman (2011) for details. The NUTS function included in the package is an efficient algorithm with these improvements implemented.  
