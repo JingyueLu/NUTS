@@ -27,10 +27,20 @@ epsilon
 
 Heuristic for choosing an initial value of epsilon
 
+<<<<<<< HEAD
 initial epsilon
+=======
+epsilon
+
+Heuristic for choosing an initial value of epsilon
+>>>>>>> 6ef3cd0bb9ad536eb744d4070deafb4a3c451200
 }
 \description{
 FindReasonableEpsilon
 
+<<<<<<< HEAD
 Heuristic for choosing an initial value of epsilon
+=======
+FindReasonableEpsilon
+>>>>>>> 6ef3cd0bb9ad536eb744d4070deafb4a3c451200
 }

@@ -10,6 +10,7 @@ StopCon(theta.minus, theta.plus, r.minus, r.plus)
 StopCon(theta.minus, theta.plus, r.minus, r.plus)
 }
 \arguments{
+<<<<<<< HEAD
 \item{theta.minus}{the leftmost position of a subtree}
 
 \item{theta.plus}{the rightmost position of a subtree}
@@ -22,9 +23,18 @@ StopCon(theta.minus, theta.plus, r.minus, r.plus)
 }
 \value{
 1 if the stopping criterion is met by the subtree; 0 if the stopping criterion is not by the subtree
+=======
+\item{r.plus}{This function computes the U-Turn stopping condition, which is used in NUTS and BuildTree functions}
+
+\item{r.plus}{This function computes the U-Turn stopping condition, which is used in NUTS and BuildTree functions}
+>>>>>>> 6ef3cd0bb9ad536eb744d4070deafb4a3c451200
 }
 \description{
 StopCon
 
+<<<<<<< HEAD
 #' This function computes the U-Turn stopping condition, which is used in NUTS and BuildTree functions
+=======
+StopCon
+>>>>>>> 6ef3cd0bb9ad536eb744d4070deafb4a3c451200
 }

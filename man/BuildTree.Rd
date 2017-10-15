@@ -10,6 +10,7 @@ BuildTree(theta, r, u, v, j, epsilon, L, joint0)
 BuildTree(theta, r, u, v, j, epsilon, L, joint0)
 }
 \arguments{
+<<<<<<< HEAD
 \item{theta}{starting position}
 
 \item{r}{starting momentum}
@@ -18,6 +19,8 @@ BuildTree(theta, r, u, v, j, epsilon, L, joint0)
 
 \item{v}{a randomly generated value, which is used to determine the direction of movement}
 
+=======
+>>>>>>> 6ef3cd0bb9ad536eb744d4070deafb4a3c451200
 \item{j}{the height of a tree}
 
 \item{epsilon}{step size}
@@ -30,13 +33,23 @@ This function builds the tree for NUTS}
 
 \item{epsilon}{step size}
 
+<<<<<<< HEAD
 \item{joint0}{to avoid computing the same value repeatedly, we compute joint0=log0- 0.5*(r0 %*% r0) beforehand and take this value as an input for the BUildTree function}
 }
 \value{
 a list of variables. It includes updated leftmost and rightmost states. It also returns updated values which are used to improve memory efficience.
+=======
+\item{joint0}{to avoid computing the same value repeatedly, we compute joint0=log0- 0.5*(r0 %*% r0) beforehand and take this value as an input for the BUildTree function
+
+This function builds the tree for NUTS}
+>>>>>>> 6ef3cd0bb9ad536eb744d4070deafb4a3c451200
 }
 \description{
 Build trees
 
+<<<<<<< HEAD
 This function builds the tree for NUTS
+=======
+Build trees
+>>>>>>> 6ef3cd0bb9ad536eb744d4070deafb4a3c451200
 }

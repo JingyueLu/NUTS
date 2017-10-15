@@ -26,6 +26,7 @@ Leapfrog(theta, r, epsilon, L)
 
 \item{L}{callable function: returns the value of log posterior and the gradient of log posterior prbability at given input}
 }
+<<<<<<< HEAD
 \value{
 the list of updated theta, r and the log posterior value at the updated point
 }
@@ -33,4 +34,10 @@ the list of updated theta, r and the log posterior value at the updated point
 Leapfrog
 
 This function perform a leapfrog step. This function is a modified version of Leapfrog in the paper. It returns etra values: log posterior value and gradient of log posterior at the new position theta.tilde
+=======
+\description{
+Leapfrog
+
+Leapfrog
+>>>>>>> 6ef3cd0bb9ad536eb744d4070deafb4a3c451200
 }
