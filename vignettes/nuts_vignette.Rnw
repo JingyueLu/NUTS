@@ -4,6 +4,8 @@
 \usepackage[round]{natbib}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{algorithm}
+\usepackage{algorithmic}
 
 % The line below tells R to use knitr on this.
 %\VignetteEngine{knitr::knitr}
@@ -122,34 +124,31 @@ In addition, NUTS also stops expanding $\mathcal{B}$ when any newly discovered s
 \end{equation}
 \noindent In NUTS, $\Delta_{max}$ is set to 1000, so the algorithm continues as long as the simulation is moderately accurate.
 
-So far, we have addressed all aspects needed for deriving the simplified NUTS algorithm. We summarise the simplified NUTS algorithm below.
-
-*To sample for a point $\tilde{\theta}$, we run the following NUTS iteration with a given $\theta_0^1$:*
-
-\begin{enumerate}
-\item Resample $r\sim\mathcal{N}(0,I)$.
-\item Resample $u\sim\text{Unif}([0,\exp\{\mathcal{L}(\theta^t)-\frac{1}{2}r\cdot r\}])$.
-$\%j$ is the number of doubling steps we take to build a trajectory path.
-$\%s$ is an indicator variable. It becomes 0 when a stopping criterion is met.
-\item Initialise $j=0$, $s=1$, $\mathcal{C}=\{(\theta_0^1,r)\}$. $\%$ Set the rightmost (+) and leftmost (-) points of the trajectory path.
-\item \textbf{while} s=1 do
-\begin{enumerate}
-\item Build a binary tree of height j
-\begin{enumerate}
-\item For each new node: check \eqref{cond1} to determine whether or not to add the new node into $\mathcal{C}$.
-\item For each new node: check \eqref{cond3}. If \eqref{cond3} is met, set $s=0$.
-\item For each subtree: check \eqref{cond2}. If \eqref{cond2} is met, set $s=0$.
-\end{enumerate}
-\item For the newly generated whole path:
-\begin{enumerate}
-\item Update $\theta^{+}$ and $\theta^{-}$ to be the rightmost and leftmost point of the whole path.
-\item Check \eqref{cond2}. If it is met, set $s=0$.
-\item For each subtree: check \eqref{cond2}. If \eqref{cond2} is met, set $s=0$.
-\end{enumerate}
-\item  j= j+1 $\#$ Update variables for while loop
-\end{enumerate}
-\item Sample $\tilde{\theta}$ uniformly from $\mathcal{C}$.
-\end{enumerate}
+\par So far, we have addressed all aspects needed for deriving the simplified NUTS algorithm. We summarise the simplified NUTS algorithm below.
+\begin{algorithm}
+\caption{Sample for a point $\tilde{\theta}$ using a NUTS iteration}
+\begin{algorithmic}
+\REQUIRE {The initial position $\theta_0^1$.}
+\STATE {Resample $r\sim\mathcal{N}(0,I)$.}
+\STATE {Resample $u\sim\text{Unif}([0,\exp\{\mathcal{L}(\theta^t)-\frac{1}{2}r\cdot r\}])$.}
+\STATE\COMMENT {$j$ is the number of doubling steps we take to build a trajectory path.}
+\STATE\COMMENT {$s$ is an indicator variable. It becomes 0 when a stopping criterion is met.}
+\STATE {Initialise $j=0$, $s=1$, $\mathcal{C}=\{(\theta_0^1,r)\}$}
+\STATE\COMMENT {Set the rightmost (+) and leftmost (-) points of the trajectory path.}
+\STATE {Initialise $\theta^{+} =\theta_0^1$, $\theta^{-} =\theta_0^1$.}
+\WHILE {s=1}
+  \WHILE{Build a binary tree of height $j$}
+    \STATE{ For each new node: check C.1 to determine whether or not to add the new node into $\mathcal{C}$.}
+    \STATE{For each new node: check C.3. If Condition Three is met, set $s=0$.}
+    \STATE{For each subtree: check C.2. If Condition Two is met, set $s=0$.}
+  \ENDWHILE
+  \STATE{Update $\theta^{+}$ and $\theta^{-}$ to be the rightmost and leftmost point of the whole path.}
+  \STATE{Check C.2 for the whole path.If it is met, set $s=0$. }
+  \STATE{j= j+1.}
+\ENDWHILE
+\STATE{Sample $\tilde{\theta}$ uniformly from $\mathcal{C}$.}
+\end{algorithmic}
+\end{algorithm}
 
 % 1. Resample $r\sim\mathcal{N}(0,I)$.
 % 2. Resample $u\sim\text{Unif}([0,\exp\{\mathcal{L}(\theta^t)-\frac{1}{2}r\cdot r\}])$.
