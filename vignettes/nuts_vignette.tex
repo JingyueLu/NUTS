@@ -40,7 +40,7 @@ The idea of HMC is to introduce a $d$-dimensional vector $r$ called momentum (wh
 $$ p(\theta,r) \propto \exp\left\{\mathcal{L}(\theta)-\frac{1}{2} r \cdot r\right\} $$
 where $\mathcal{L}$ is the unnormalized logarithm of the joint posterior density of $\theta$ and $\cdot$ is an inner product.
 
-\par Samples of $(\theta,r)$ are obtained by using the Stormer-Verlet \textit{leapfrog integrator}. Given the gradient $\nabla_{\theta}\mathcal{L}$ and the step size $\epsilon$, the updates proceed as follows:
+\par Samples of $(\theta,r)$ are obtained by using the St{\"o}rmer-Verlet \textit{leapfrog integrator}. Given the gradient $\nabla_{\theta}\mathcal{L}$ and the step size $\epsilon$, the updates proceed as follows:
 \begin{equation*}
 r^{t+\epsilon/2}=r^t+\epsilon/2 \nabla_{\theta}\mathcal{L}(\theta^t)
 \quad \theta^{t+\epsilon} = \theta^t+\epsilon r^{t+\epsilon/2} \quad
@@ -111,11 +111,11 @@ should be less than 0:
 \end{equation}
 % Thus, the NUTS algorithm stops when:
 %
-% \textbf{Condition Two:}
+% \textbf{\eqref{cond2}:}
 % $$(\theta_{end}-\theta_{start})\cdot r < 0.$$
-This condition is checked for each subtree and also for the whole tree. %Other than the stopping condition for U-turn, NUTS also stops expanding $\mathcal{B}$ when any newly discovered states in the continuing process are likely to have near 0 probability to be in $\mathcal{C}$ . To formulate, NUTS develops the following condition based on Condition One:
+This condition is checked for each subtree and also for the whole tree. %Other than the stopping condition for U-turn, NUTS also stops expanding $\mathcal{B}$ when any newly discovered states in the continuing process are likely to have near 0 probability to be in $\mathcal{C}$ . To formulate, NUTS develops the following condition based on \eqref{cond1}:
 In addition, NUTS also stops expanding $\mathcal{B}$ when any newly discovered states in the continuing process has extremely low probability to be in $\mathcal{C}$. To formulate, NUTS develops the following condition based on \eqref{cond1}:
-% \textbf{Condition Three:}
+% \textbf{\eqref{cond3}:}
 % The algorithm stops when
 \begin{equation}
 \mathcal{L}(\theta) -\frac{1}{2}r\cdot r -\log u > -\Delta_{max}.
@@ -137,15 +137,15 @@ $\%s$ is an indicator variable. It becomes 0 when a stopping criterion is met.
 \begin{enumerate}
 \item Build a binary tree of height j
 \begin{enumerate}
-\item For each new node: check Condition One to determine whether or not to add the new node into $\mathcal{C}$.
-\item For each new node: check Condition Three. If Condition Three is met, set $s=0$.
-\item For each subtree: check Condition Two. If Condition Two is met, set $s=0$.
+\item For each new node: check \eqref{cond1} to determine whether or not to add the new node into $\mathcal{C}$.
+\item For each new node: check \eqref{cond3}. If \eqref{cond3} is met, set $s=0$.
+\item For each subtree: check \eqref{cond2}. If \eqref{cond2} is met, set $s=0$.
 \end{enumerate}
 \item For the newly generated whole path:
 \begin{enumerate}
 \item Update $\theta^{+}$ and $\theta^{-}$ to be the rightmost and leftmost point of the whole path.
-\item Check Condition Two. If it is met, set $s=0$.
-\item For each subtree: check Condition Two. If Condition Two is met, set $s=0$.
+\item Check \eqref{cond2}. If it is met, set $s=0$.
+\item For each subtree: check \eqref{cond2}. If \eqref{cond2} is met, set $s=0$.
 \end{enumerate}
 \item  j= j+1 $\#$ Update variables for while loop
 \end{enumerate}
@@ -161,12 +161,12 @@ $\%s$ is an indicator variable. It becomes 0 when a stopping criterion is met.
 % 4. Initialise $\theta^{+}=\theta_0^0$,$\theta^{-}=\theta_0^0$.
 % 5. **while** s=1 do
 %     1. Build a binary tree of height j
-%         1. For each new node: check Condition One to determine whether or not to add the new node into $\mathcal{C}$.
-%         2. For each new node: check Condition Three. If Condition Three is met, set $s=0$.
-%         3. For each subtree: check Condition Two. If Condition Two is met, set $s=0$.
+%         1. For each new node: check \eqref{cond1} to determine whether or not to add the new node into $\mathcal{C}$.
+%         2. For each new node: check \eqref{cond3}. If \eqref{cond3} is met, set $s=0$.
+%         3. For each subtree: check \eqref{cond2}. If \eqref{cond2} is met, set $s=0$.
 %     2. For the newly generated whole path:
 %         1. Update $\theta^{+}$ and $\theta^{-}$ to be the rightmost and leftmost point of the whole path.
-%         2. Check Condition Two. If it is met, set $s=0$.
+%         2. Check \eqref{cond2}. If it is met, set $s=0$.
 %         \# Update variables for while loop
 %     3. j= j+1
 % 6. Sample $\tilde{\theta}$ uniformly from $\mathcal{C}$.
