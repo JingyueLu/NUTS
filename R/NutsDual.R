@@ -164,6 +164,13 @@ FindReasonableEpsilon <- function(theta,log.start, L){
   r = rnorm(length(theta))
   g(theta.prime, r.prime, log.prime) %=% Leapfrog(theta,r,epsilon, L)
 
+  k = 1
+  while (is.infinite(log.prime)){
+    k <- k* 0.5
+    g(trivial, r.prime, log.prime) %=% Leapfrog(theta0, r, epsilon * k, L)}
+
+  epsilon = 0.5 * k * epsilon
+
   #Computing the ratio of p(theta.prime, r.prime) over p(theta, r)
   tempratio <- exp(log.prime-0.5*(crossprod(r.prime, r.prime)) - log.start + 0.5*(crossprod(r, r)))
   a <- 2* as.numeric(tempratio > 0.5)-1
@@ -214,7 +221,7 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
   t0 = 10
   kappa = 0.75
 
-  for(m in 2:Madapt+M){
+  for(m in 2:(Madapt+M)){
     r0 <- rnorm(len)
 
     #resample u (logtemp updated each iteration)
@@ -262,7 +269,7 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
     if (m < Madapt) {
       temp <- 1/(m+t0)
       H.bar <- (1 - temp)*H.bar + temp*(delta - alpha/n.alpha)
-      epsilon <- exp(mu - sqrt(m)/gamma)*H.bar
+      epsilon <- exp(mu - (sqrt(m)/gamma)*H.bar)
       temp <- m^{-kappa}
       epsilon.bar <- exp(temp*log(epsilon)+(1-temp)*log(epsilon.bar))
     }
