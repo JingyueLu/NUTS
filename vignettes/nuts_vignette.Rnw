@@ -137,6 +137,7 @@ In addition, NUTS also stops expanding $\mathcal{B}$ when any newly discovered s
 \STATE\COMMENT {Set the rightmost (+) and leftmost (-) points of the trajectory path.}
 \STATE {Initialise $\theta^{+} =\theta_0^1$, $\theta^{-} =\theta_0^1$.}
 \WHILE {s=1}
+  \STATE{Build a binary tree of height $j$}
   \WHILE{Build a binary tree of height $j$}
     \STATE{ For each new node: check C.1 to determine whether or not to add the new node into $\mathcal{C}$.}
     \STATE{For each new node: check C.3. If Condition Three is met, set $s=0$.}
