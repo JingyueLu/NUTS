@@ -5,7 +5,7 @@
 #' @param r 	the list on the right-hand side
 #'
 #' @example
-#' g(a,b) = list(c(3,5,6),4)
+#' g(a,b) %=% list(c(3,5,6),4)
 #'
 '%=%' = function(l, r, ...) UseMethod('%=%')
 
