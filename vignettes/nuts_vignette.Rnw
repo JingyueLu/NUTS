@@ -14,7 +14,7 @@
 \author{Jingyue Lu \and Marco Palma}
 
 \begin{document}
-\SweaveOpts{concordance=TRUE}
+%\SweaveOpts{concordance=TRUE}
 
 \maketitle
 
