@@ -71,6 +71,7 @@ g = function(...) {
 
 Leapfrog <- function(theta, r, epsilon, L){
   g(trivial,grad.theta) %=% L(theta)
+  #print(c(grad.theta,epsilon))
   r.tilde <- r+ 0.5*epsilon*grad.theta
   theta.tilde <- theta + epsilon*r.tilde
   g(log.tilde, grad.tilde) %=% L(theta.tilde)
@@ -100,6 +101,14 @@ FindReasonableEpsilon <- function(theta,log.start, L){
   r = rnorm(length(theta))
   g(theta.prime, r.prime, log.prime) %=% Leapfrog(theta,r,epsilon, L)
 
+  #Check whether log density is infinite. If it is, half the epsilong and the process continues until log density is no longer infinite
+  k = 1
+  while (is.infinite(log.prime)){
+    k <- k* 0.5
+    g(trivial, r.prime, log.prime) %=% Leapfrog(theta, r, epsilon * k, L)}
+
+  epsilon = 0.5 * k * epsilon
+
   #Computing the ratio of p(theta.prime, r.prime) over p(theta, r)
   tempratio <- exp(log.prime-0.5*(crossprod(r.prime, r.prime)) - log.start + 0.5*(crossprod(r, r)))
   a <- 2* as.numeric(tempratio > 0.5)-1
@@ -114,7 +123,6 @@ FindReasonableEpsilon <- function(theta,log.start, L){
   return(epsilon)
 
 }
-
 
 ####################################################################################
 ####################################################################################
@@ -136,13 +144,11 @@ FindReasonableEpsilon <- function(theta,log.start, L){
 HmcDual <- function(theta0, delta, lambda, L, M, Madapt) {
   len <- length(theta0)
   outcome <-  matrix(theta0 , nrow = Madapt + M, ncol = len , byrow = T)
+  alpha.vec <- rep(NA,Madapt + M)
 
   # Find a reasonable initial value of epsilon using heuristic
   g(log.temp, grad0) %=% L(theta0)
   epsilon =  FindReasonableEpsilon(theta0, log.temp, L)
-
-  #L.func<-function(x) return(c(logDensity(x), dLogDensity(x)))
-  #epsilon <-  FindReasonableEpsilon(theta0, logDensity(theta0), L=L.func)
 
   # Setting up other parameters for dual averaging
   mu <- log(10*epsilon)
@@ -155,33 +161,31 @@ HmcDual <- function(theta0, delta, lambda, L, M, Madapt) {
   for (m in 2:(Madapt+M)) {
     r0 <- rnorm(len,  0, sd = 1)
     outcome[m, ] <- outcome[m-1, ]
-    #theta.tilde <- outcome[m-1, ]
     proposal <- list(theta.tilde = outcome[m-1, ], r.tilde = r0)
     Lm<-max(1,round(lambda/epsilon))
-
     for (i in 1:Lm)  {
-      #proposal <- leapfrog(proposal$theta.tilde, proposal$r.tilde, epsilon, dLogDensity)
-      g(proposal$theta.tilde, proposal$r.tilde, trivial)%=%Leapfrog(outcome[m-1, ], r0, epsilon, L)
+      g(proposal$theta.tilde, proposal$r.tilde, trivial)%=%Leapfrog(proposal$theta.tilde, proposal$r.tilde, epsilon, L)
     }
+    #print(proposal)
     #alpha <- min(1, within(proposal,exp(L(theta.tilde)[[1]] - 1/2 * crossprod(r.tilde) - L(outcome[m-1, ])[[1]] + 1/2 * crossprod(r0))))
-    alpha <- min(1,exp(L(proposal$theta.tilde)[[1]] - 1/2 * crossprod(proposal$r.tilde) - L(outcome[m-1, ])[[1]] + 1/2 * crossprod(r0)))
-    if (runif(1) <= alpha){
-      #outcome[m,] <- proposal$theta.tilde
+    alpha.vec[m] <- min(1,exp(L(proposal$theta.tilde)[[1]] - 1/2 * crossprod(proposal$r.tilde) - L(outcome[m-1, ])[[1]] + 1/2 * crossprod(r0)))
+    #print(alpha.vec[m])
+    if (runif(1) <= alpha.vec[m]){
       outcome[m,]<-proposal$theta.tilde
     }
 
     ###Dual Averaging
     if (m <= Madapt) {
-      temp <- 1/(m+t0)
-      H.bar <- (1 - temp)*H.bar + temp*(delta - alpha)
-      epsilon <- exp(mu - sqrt(m)/gamma*H.bar)
-      temp <- m^{-kappa}
+      temp <- 1/(m-1+t0)
+      H.bar <- (1 - temp)*H.bar + temp*(delta - alpha.vec[m])
+      epsilon <- exp(mu - sqrt(m-1)/gamma*H.bar)
+      temp <- (m-1)^(-kappa)
       epsilon.bar <- exp(temp*log(epsilon)+(1-temp)*log(epsilon.bar))
-    }
-    else{
+      print(cat("Iteration",m, ": ", c(epsilon.bar,epsilon)))
+    } else{
       epsilon <- epsilon.bar
     }
 
   }
-  return(outcome[(Madapt+1):(M+Madapt),])
+  return(list(samples = outcome[(Madapt + 1):(M + Madapt),],alpha = alpha.vec))
 }
