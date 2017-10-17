@@ -2,12 +2,9 @@
 
 ##Normal Case
 L <- function(theta){
-  cov = matrix(c(1,0,0,4), nrow=2, ncol=2, byrow=TRUE)
-  A = solve(cov)
-
-  grad0 = - cov %*% theta
+  cov =c(1,4)
+  grad0 = - theta/cov
   log0 = 0.5*t(theta) %*%grad0
-
   return(list(log0, grad0))
 }
 
