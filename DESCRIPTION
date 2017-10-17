@@ -11,3 +11,4 @@ LazyData: true
 RoxygenNote: 6.0.1
 Suggests: knitr
 VignetteBuilder: knitr
+Depends: mcmcse
