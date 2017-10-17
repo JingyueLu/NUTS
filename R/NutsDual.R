@@ -164,10 +164,11 @@ FindReasonableEpsilon <- function(theta,log.start, L){
   r = rnorm(length(theta))
   g(theta.prime, r.prime, log.prime) %=% Leapfrog(theta,r,epsilon, L)
 
+  #Check whether log density is infinite. If it is, half the epsilong and the process continues until log density is no longer infinite
   k = 1
   while (is.infinite(log.prime)){
     k <- k* 0.5
-    g(trivial, r.prime, log.prime) %=% Leapfrog(theta0, r, epsilon * k, L)}
+    g(trivial, r.prime, log.prime) %=% Leapfrog(theta, r, epsilon * k, L)}
 
   epsilon = 0.5 * k * epsilon
 
@@ -221,6 +222,13 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
   t0 = 10
   kappa = 0.75
 
+  # Initialise a vector for storing average acceptance probability statistic
+  accproV <- c()
+  # Initialise a vector for storing epsilon bar
+  epsibarV <-c()
+  # Initialise a vector for storing the number of doublings j for each sample point (height of the tree)
+  heightTV <-c()
+
   for(m in 2:(Madapt+M)){
     r0 <- rnorm(len)
 
@@ -241,15 +249,15 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
     n <- 1
     s <- 1
 
-
     #print(m)
     # Build Subtrees
     while(s==1){
       #Choose a direction : forward direction (+1), backward (-1)
+
       v  = 2*as.numeric(runif(1)>0.5)-1
 
       if (v==-1){
-        g(theta.minus, r.minus, trivial, trivial, theta.prime, n.prime, s.prime, alpha, n.alpha, log.prime) %=% BuildTree(theta.minus,r.minus, u, v, j, epsilon, L, joint  )
+        g(theta.minus, r.minus, trivial, trivial, theta.prime, n.prime, s.prime, alpha, n.alpha, log.prime) %=% BuildTree(theta.minus,r.minus, u, v, j, epsilon, L, joint)
       }
       else{
         g(trivial,trivial, theta.plus, r.plus, theta.prime, n.prime, s.prime, alpha, n.alpha, log.prime) %=% BuildTree(theta.plus,r.plus, u, v, j, epsilon, L, joint)
@@ -264,21 +272,28 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
       j <- j+1
     }
 
+    heightTV <-c(heightTV, j)
+
     # Using Dual Averaging to adapt epsilon (Burn-in period -- modify sample size?
     # discard the burn-in samples?)
+
+    acc<-alpha/n.alpha
+    accproV <- c(accproV, acc)
+
     if (m < Madapt) {
       temp <- 1/(m+t0)
-      H.bar <- (1 - temp)*H.bar + temp*(delta - alpha/n.alpha)
+      H.bar <- (1 - temp)*H.bar + temp*(delta - acc)
       epsilon <- exp(mu - (sqrt(m)/gamma)*H.bar)
       temp <- m^{-kappa}
       epsilon.bar <- exp(temp*log(epsilon)+(1-temp)*log(epsilon.bar))
+      epsibarV <- c(epsibarV, epsilon.bar)
     }
     else{
       epsilon <- epsilon.bar
     }
 
   }
-  return(out[(Madapt+1):(M+Madapt),])
+  return(list(samples=out[(Madapt+1):(M+Madapt),], acceptrate= accproV[(Madapt+1): length(accproV)], epsilonNor = epsibarV/epsilon, Length=heightTV ))
 
 }
 
