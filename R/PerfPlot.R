@@ -30,8 +30,9 @@ PerfPlotHmc<-function(theta0, lambda, L, M = 2000, Madapt = 1000){
     EssMatrix$ESS[i] <- multiESS(samples)
     print(round(100*i/dim(DualAvMatrix)[1],2))
   }
+
   DualAvMatrix$Model<-paste("HMC",round(DualAvMatrix$Model,3))
-  ESSMatrix$Model<-paste("HMC",round(ESSMatrix$Model,3))
+  EssMatrix$Model<-paste("HMC",round(EssMatrix$Model,3))
   return(list(DualAvMatrix = DualAvMatrix, EssMatrix = EssMatrix))
 }
 
