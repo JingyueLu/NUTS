@@ -205,7 +205,7 @@ FindReasonableEpsilon <- function(theta0,log.start, L){
 
 NutsDual <- function(theta0, delta, L, M, Madapt){
 
-  # Set up output structure: each theta is an array
+  # Set up output structure: each theta is a row
   # samples is a matrix of size M x length(theta)
   len <- length(theta0)
   out <- matrix(0 , nrow = Madapt + M, ncol = len )
@@ -294,7 +294,7 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
     else{
       epsilon <- epsilon.bar
     }
-
+  #print(m)
   }
   return(list(samples=out[(Madapt+1):(M+Madapt),], acceptrate= accproV[(Madapt+1): length(accproV)], epsilonNor = epsibarV/epsilon, Length=heightTV))
 

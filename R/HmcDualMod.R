@@ -58,7 +58,7 @@ HmcDualMod <- function(theta0, delta, lambda, L, M, Madapt) {
     } else{
       epsilon <- epsilon.bar
     }
-    print(m)
+    #print(m)
   }
   return(list(samples = outcome[(Madapt + 1):(M + Madapt),],alpha = alpha.vec))
 }

@@ -3,10 +3,8 @@
 ##Normal Case
 L <- function(theta){
   cov = c(1,4)
-
   grad0 = - theta/cov
   log0 = 0.5*t(theta) %*%grad0
-
   return(list(log0, grad0))
 }
 
