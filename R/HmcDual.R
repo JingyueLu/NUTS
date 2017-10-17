@@ -166,10 +166,7 @@ HmcDual <- function(theta0, delta, lambda, L, M, Madapt) {
     for (i in 1:Lm)  {
       g(proposal$theta.tilde, proposal$r.tilde, trivial)%=%Leapfrog(proposal$theta.tilde, proposal$r.tilde, epsilon, L)
     }
-    #print(proposal)
-    #alpha <- min(1, within(proposal,exp(L(theta.tilde)[[1]] - 1/2 * crossprod(r.tilde) - L(outcome[m-1, ])[[1]] + 1/2 * crossprod(r0))))
     alpha.vec[m] <- min(1,exp(L(proposal$theta.tilde)[[1]] - 1/2 * crossprod(proposal$r.tilde) - L(outcome[m-1, ])[[1]] + 1/2 * crossprod(r0)))
-    #print(alpha.vec[m])
     if (runif(1) <= alpha.vec[m]){
       outcome[m,]<-proposal$theta.tilde
     }
@@ -181,11 +178,9 @@ HmcDual <- function(theta0, delta, lambda, L, M, Madapt) {
       epsilon <- exp(mu - sqrt(m-1)/gamma*H.bar)
       temp <- (m-1)^(-kappa)
       epsilon.bar <- exp(temp*log(epsilon)+(1-temp)*log(epsilon.bar))
-      print(cat("Iteration",m, ": ", c(epsilon.bar,epsilon)))
     } else{
       epsilon <- epsilon.bar
     }
-
   }
   return(list(samples = outcome[(Madapt + 1):(M + Madapt),],alpha = alpha.vec))
 }
