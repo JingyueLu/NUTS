@@ -17,11 +17,8 @@ L <- function(x) {
 
 samples.hyb <- hybridMC(y.start=c(1,1), n.samp=2000, logDens=logDens, dLogDens=dlogDens, epsilon=.2, LFsteps=10)
 samples.test <- hmc.nograd(theta.start = c(1,1), epsilon = 0.2, L = 10, logDensity = logDens, dlogDensity=dlogDens, M = 2000)
-<<<<<<< HEAD
 samples.nuts <- NutsDual(c(1,1),0.6, L, 2000, 500)
-=======
 samples.hmcdual <- HmcDual(theta0=c(1,1), delta = 0.65, lambda = 1.5, L = L.func, M = 2000, Madapt = 1000)
->>>>>>> 23a65b9a11cc6fe54823b618e66e83547d8a6902
 
 # For NUTS::hmc.nograd plot the MCMC chains and densities
 ts.plot(samples.test[,1])
@@ -49,11 +46,11 @@ microbenchmark(hybridMC(y.start = c(1,2,3,4), n.samp=2000, logDens=logDens, dLog
                HmcDual(c(1,2,3,4), delta = 0.65, lambda = 1.5, L = L.func, M = 2000, Madapt = 1000))
 
 # For HmcDual
-ts.plot(samples.hmcdual[,1])
-ts.plot(samples.hmcdual[,2])
+ts.plot(samples.hmcdual$samples[,1])
+ts.plot(samples.hmcdual$samples[,2])
 
 # Plot a histogram of the first variable, with true density
-hist(samples.hmcdual[,2],freq=FALSE,breaks=50)
+hist(samples.hmcdual$samples[,2],freq=FALSE,breaks=50)
 x = seq(-5,5,len=100)
 lines(x,0.5*dexp(abs(x)),col="red") #true density in red
 # Autocorrelation function
