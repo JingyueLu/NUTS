@@ -98,6 +98,7 @@ BuildTree <- function(theta, r,u,v, j, epsilon, L, joint0) {
 
     alpha.prime <- min(1, exp(temp-joint0))
     n.alphaprime <- 1
+
     return(list(theta.prime,r.prime,theta.prime,r.prime,theta.prime, n.prime, s.prime, alpha.prime, n.alphaprime, log.prime ))
   }
 
@@ -141,8 +142,8 @@ BuildTree <- function(theta, r,u,v, j, epsilon, L, joint0) {
 #'
 StopCon <-function(theta.minus, theta.plus, r.minus,r.plus){
   theta.diff <- theta.plus - theta.minus
-  temp1 <- as.numeric(crossprod(theta.diff,r.minus))
-  temp2 <- as.numeric(crossprod(theta.diff, r.plus))
+  temp1 <- as.numeric(I(crossprod(theta.diff,r.minus)>0))
+  temp2 <- as.numeric(I(crossprod(theta.diff, r.plus)>0))
   return (temp1*temp2)
 }
 
@@ -159,16 +160,16 @@ StopCon <-function(theta.minus, theta.plus, r.minus,r.plus){
 #' @return initial epsilon
 #'
 #'
-FindReasonableEpsilon <- function(theta,log.start, L){
+FindReasonableEpsilon <- function(theta0,log.start, L){
   epsilon <- 1
-  r = rnorm(length(theta))
-  g(theta.prime, r.prime, log.prime) %=% Leapfrog(theta,r,epsilon, L)
+  r = rnorm(length(theta0))
+  g(theta.prime, r.prime, log.prime) %=% Leapfrog(theta0,r,epsilon, L)
 
   #Check whether log density is infinite. If it is, half the epsilong and the process continues until log density is no longer infinite
-  k = 1
+  k = 0.5
   while (is.infinite(log.prime)){
     k <- k* 0.5
-    g(trivial, r.prime, log.prime) %=% Leapfrog(theta, r, epsilon * k, L)}
+    g(trivial, r.prime, log.prime) %=% Leapfrog(theta0, r, epsilon * k, L)}
 
   epsilon = 0.5 * k * epsilon
 
@@ -179,7 +180,7 @@ FindReasonableEpsilon <- function(theta,log.start, L){
 
   while (tempratio^a > 2^(-a) ){
     epsilon <-  epsilon * (2^(a))
-    g(theta.prime, r.prime, log.prime) %=% Leapfrog(theta,r,epsilon, L)
+    g(theta.prime, r.prime, log.prime) %=% Leapfrog(theta0,r,epsilon, L)
     tempratio <- exp(log.prime - 0.5*(crossprod(r.prime, r.prime)) - log.start + 0.5*(crossprod(r, r)))
     #print(tempratio)
   }
@@ -228,6 +229,7 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
   epsibarV <-c()
   # Initialise a vector for storing the number of doublings j for each sample point (height of the tree)
   heightTV <-c()
+  #stepsV <-c()
 
   for(m in 2:(Madapt+M)){
     r0 <- rnorm(len)
@@ -273,6 +275,7 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
     }
 
     heightTV <-c(heightTV, j)
+    #stepsV <-c(stepsV, steps)
 
     # Using Dual Averaging to adapt epsilon (Burn-in period -- modify sample size?
     # discard the burn-in samples?)
@@ -281,10 +284,10 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
     accproV <- c(accproV, acc)
 
     if (m < Madapt) {
-      temp <- 1/(m+t0)
+      temp <- 1/(m-1+t0)
       H.bar <- (1 - temp)*H.bar + temp*(delta - acc)
-      epsilon <- exp(mu - (sqrt(m)/gamma)*H.bar)
-      temp <- m^{-kappa}
+      epsilon <- exp(mu - (sqrt(m-1)/gamma)*H.bar)
+      temp <- (m-1)^{-kappa}
       epsilon.bar <- exp(temp*log(epsilon)+(1-temp)*log(epsilon.bar))
       epsibarV <- c(epsibarV, epsilon.bar)
     }
@@ -293,7 +296,7 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
     }
 
   }
-  return(list(samples=out[(Madapt+1):(M+Madapt),], acceptrate= accproV[(Madapt+1): length(accproV)], epsilonNor = epsibarV/epsilon, Length=heightTV ))
+  return(list(samples=out[(Madapt+1):(M+Madapt),], acceptrate= accproV[(Madapt+1): length(accproV)], epsilonNor = epsibarV/epsilon, Length=heightTV))
 
 }
 
