@@ -2,10 +2,9 @@
 
 ##Normal Case
 L <- function(theta){
-  cov = matrix(c(1,0,0,4), nrow=2, ncol=2, byrow=TRUE)
-  A = solve(cov)
+  cov = c(1,4)
 
-  grad0 = - cov %*% theta
+  grad0 = - theta/cov
   log0 = 0.5*t(theta) %*%grad0
 
   return(list(log0, grad0))
@@ -16,7 +15,7 @@ r <- rnorm(2)
 # Testing Find epsilon
 
 
-M = 2000
+M = 5000
 Madapt = 1000
 
 g(samples, acceprate, epsilonNor, height) %=% NutsDual(theta0, 0.6, L, M, Madapt)
