@@ -43,6 +43,21 @@ GradLogTarget <- function(theta){
   return(as.vector(t(temp) %*% ((exp(- temp %*% theta)) / (1 + exp(- temp %*% theta))) - theta / sigma.sq))
 }
 
+# L<-function(theta){
+#   X.star <- cbind(1,X)
+#   y <- y
+#   sigma.sq <- 100
+#   temp <- X.star*y
+#   dlog <-as.numeric(- sum(log(1 + exp(- temp %*% theta))) - crossprod(theta) / (2 * 100))
+#   gdlog <-as.vector(t(temp) %*% ((exp(- temp %*% theta)) / (1 + exp(- temp %*% theta))) - theta / sigma.sq)
+#   return(list(dlog, gdlog))
+# }
+# M = 10000
+# Madapt = 5000
+# delta = 0.6
+# theta0 <- c(alpha.start, beta.start)
+# out <- NutsDual(theta0, 0.6, L, 100000, 50000)
+
 #all.equal(pracma::grad(LogTarget,aaa),GradLogTarget(aaa)) #Check that the function returns effectively the gradient
 
 # theta.hmc<-hmc(theta.start = c(alpha.start, beta.start), epsilon = 0.039, L = 10, logDensity = LogTarget, M = 1000)
