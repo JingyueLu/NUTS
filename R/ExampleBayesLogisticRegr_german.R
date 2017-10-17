@@ -60,7 +60,7 @@ GradLogTarget <- function(theta){
 
 #all.equal(pracma::grad(LogTarget,aaa),GradLogTarget(aaa)) #Check that the function returns effectively the gradient
 
-# theta.hmc<-hmc(theta.start = c(alpha.start, beta.start), epsilon = 0.039, L = 10, logDensity = LogTarget, M = 1000)
+# theta.hmc<-hmc(theta.start = c(alpha.start, beta.start), epsilon = 0.06, L = 10, logDensity = LogTarget, M = 10000)
 # ts.plot(theta.hmc[,1])
 # ts.plot(theta.hmc[,2])
 #
