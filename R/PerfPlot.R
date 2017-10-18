@@ -27,7 +27,7 @@ PerfPlotHmc<-function(theta0, lambda, L, M = 2000, Madapt = 1000){
     set.seed(i %% 10)
     g(samples, acceptrate) %=% HmcDual(theta0, delta = DualAvMatrix$Delta[i], lambda = DualAvMatrix$Model[i], L, M, Madapt)
     DualAvMatrix$Discrepancy[i]<-mean(acceptrate,na.rm=T)-DualAvMatrix$Delta[i]
-    EssMatrix$ESS[i] <- multiESS(samples)
+    EssMatrix$ESS[i] <- ess(samples)   ### replaced multiESS with ess
     print(round(100*i/dim(DualAvMatrix)[1],2))
   }
 
@@ -36,9 +36,54 @@ PerfPlotHmc<-function(theta0, lambda, L, M = 2000, Madapt = 1000){
   return(list(DualAvMatrix = DualAvMatrix, EssMatrix = EssMatrix))
 }
 
+
 ########################################################################################
 ########################################################################################
 ########################################################################################
+
+#' PerfPlotHmcDualMod
+#'
+#' Create two matrices:
+#' - one with the discrepancies between the desired average acceptance rate
+#' \delta and the mean acceptance rate \alpha in Hamiltonian Monte Carlo with
+#' Dual Averaging with modified leapfrog;
+#' - the other with the effective sample size (ESS).
+#'
+#' @param theta0 inizialization
+#' @param lambda the trajectory length
+#' @param L callable function needed in Leapfrog
+#' @param M the number of iterations of the algorithm
+#' @param Madapt the number of iterations of the warmup phase
+#'
+#' @return A list whose first element is the matrix DualAvMatrix of 10 discrepancies for
+#' each value of \delta and the second element is the matrix ESSMatrix
+#' of 10 ESS for each value of \delta.
+
+
+
+PerfPlotHmcDualMod<-function(theta0, lambda, L, M = 2000, Madapt = 1000){
+  deltaSeq <-seq(0.25, 0.95, length = 8)
+  seed <- 0:9
+  DualAvMatrix <- expand.grid(Seed = seed,Delta = deltaSeq, Discrepancy = NA, Model = lambda)
+  EssMatrix <- expand.grid(Seed = seed, Delta = deltaSeq, ESS = NA, Model = lambda)
+  for(i in 1:dim(DualAvMatrix)[1]){
+    set.seed(i %% 10)
+    g(samples, acceptrate) %=% HmcDualMod(theta0, delta = DualAvMatrix$Delta[i], lambda = DualAvMatrix$Model[i], L, M, Madapt)
+    DualAvMatrix$Discrepancy[i]<-mean(acceptrate,na.rm=T)-DualAvMatrix$Delta[i]
+    EssMatrix$ESS[i] <- multiESS(samples)   ### replaced multiESS with ess
+    print(round(100*i/dim(DualAvMatrix)[1],2))
+  }
+
+  DualAvMatrix$Model<-paste("HMC",round(DualAvMatrix$Model,3))
+  EssMatrix$Model<-paste("HMC",round(EssMatrix$Model,3))
+  return(list(DualAvMatrix = DualAvMatrix, EssMatrix = EssMatrix))
+}
+
+
+########################################################################################
+########################################################################################
+########################################################################################
+
 
 #' PerfPlotNuts
 #'
@@ -68,7 +113,7 @@ PerfPlotNuts<-function(theta0, L, M = 2000, Madapt = 1000){
     set.seed(i %% 10)
     g(samples, acceptrate) %=% NutsDual(theta0, delta = DualAvMatrix$Delta[i], L, M, Madapt)
     DualAvMatrix$Discrepancy[i]<-mean(acceptrate,na.rm=T)-DualAvMatrix$Delta[i]
-    EssMatrix$ESS[i] <- multiESS(samples)
+    EssMatrix$ESS[i] <- multiESS(samples)   ### replaced multiESS with ess
     print(round(100*i/dim(DualAvMatrix)[1],2))
   }
   return(list(DualAvMatrix = DualAvMatrix, EssMatrix = EssMatrix))
@@ -129,7 +174,7 @@ sp
 ### Plot the discrepancies (not exactly) like in Figure 6 in Hoffman & Gelman (2014)
 
 library(ggplot2)
-spESS <- ggplot(finalplot.ESS, aes(x=Delta, y=ESS)) + geom_point(shape=1)
+spESS <- ggplot(finalplot.ESS, aes(x=Delta, y=ESS)) + ylim(0,2000) + geom_point(shape=1)
 spESS <- spESS + facet_grid( ~ Model)
 spESS <- spESS + stat_summary(fun.y=mean, colour="red", geom="line")
 spESS <- spESS + theme_bw()
