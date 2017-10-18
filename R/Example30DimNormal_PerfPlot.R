@@ -1,25 +1,25 @@
 #' Simulate a 30-dimensional multivariate normal distribution
 #' and reproduce Figure 3 and Figure 6 from Hoffman & Gelman (2014)
-
-sdevs <- c (110, 100, seq(16,8,length=26), 1.1, 1.0)
-V <- sdevs^2
-L <- function(theta){
-  grad0 = - theta/V
-  log0 = 0.5*t(theta) %*%grad0
-  return(list(log0, grad0))
-}
-
-
-theta0 <- rnorm(30)
-samples.hmc <- Hmc(theta0 = theta0, epsilon = 0.2, leap.nsteps = 10, L = L, M = 2000)
-samples.hmcdual <- HmcDual(theta0 = theta0, delta = 0.65, lambda = 1.5, L = L, M = 2000, Madapt = 1000)
-samples.nuts <- NutsDual(theta0 = theta0, delta = 0.6, L = L, M = 2000, Madapt = 1000)
-hist(samples.hmc[,2],freq=FALSE,breaks=50,col=rgb(1,0,0,0.5),ylim=c(0,0.25))
-hist(samples.hmcdual$samples[,2],freq=FALSE,breaks=50,add=T,col=rgb(0,0,1,0.5))
-hist(samples.nuts$samples[,2],freq=FALSE,breaks=50,add=T,col=rgb(0,1,0,0.5))
-x = seq(-5,5,len=100)
-lines(x,0.5*dexp(abs(x)),col="black") #true density in black
-
+#
+# sdevs <- c (110, 100, seq(16,8,length=26), 1.1, 1.0)
+# V <- sdevs^2
+# L <- function(theta){
+#   grad0 = - theta/V
+#   log0 = 0.5*t(theta) %*%grad0
+#   return(list(log0, grad0))
+# }
+#
+#
+# theta0 <- rnorm(30)
+# samples.hmc <- Hmc(theta0 = theta0, epsilon = 0.2, leap.nsteps = 10, L = L, M = 2000)
+# samples.hmcdual <- HmcDual(theta0 = theta0, delta = 0.65, lambda = 1.5, L = L, M = 2000, Madapt = 1000)
+# samples.nuts <- NutsDual(theta0 = theta0, delta = 0.6, L = L, M = 2000, Madapt = 1000)
+# hist(samples.hmc[,2],freq=FALSE,breaks=50,col=rgb(1,0,0,0.5),ylim=c(0,0.25))
+# hist(samples.hmcdual$samples[,2],freq=FALSE,breaks=50,add=T,col=rgb(0,0,1,0.5))
+# hist(samples.nuts$samples[,2],freq=FALSE,breaks=50,add=T,col=rgb(0,1,0,0.5))
+# x = seq(-5,5,len=100)
+# lines(x,0.5*dexp(abs(x)),col="black") #true density in black
+#
 
 
 
