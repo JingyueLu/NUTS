@@ -107,5 +107,27 @@ Hmc <- function(theta0, epsilon, leap.nsteps, L, M) {
       outcome[m,] <- proposal$theta.tilde
     }
   }
-  return(outcome[-1,])
+  HmcResult <- list(samples=outcome[-1,])
+  class(HmcResult ) <- "Hmc"
+  return(HmcResult)
 }
+
+print.Hmc <- function(obj){
+  D <- length(obj[[1]][1,])
+  m <- length(obj[[1]][,1])
+  cat("Dimension of the parameter:", D, "\n")
+  cat("Sample size generated: M = ", m, "\n")
+  len <- min(m,6)
+  dots <- ifelse(m>6, "...","\n")
+  for (i in 1:D){
+    cat("theta",i,": ", format(round(obj[[1]][(1:len),i], digits = 6), nsmall=6), dots, "\n")
+  }
+  invisible(obj)
+}
+
+
+
+
+
+
+

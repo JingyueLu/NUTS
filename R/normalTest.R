@@ -157,7 +157,7 @@ plot(x, SubMatrixHMD1[,1],log="y", type="b",xlab ="trajectory length 100(red); 1
 points(x,SubMatrixHMD2[,1], log="y", type="b",col="green", pch=16)
 points(x,SubMatrixHMD3[,1], log="y",type="b", col="blue", pch=16)
 
-## variance of variance estimate (NUTS & Independent)
+## variance of variance estimate
 plot(x, SubMatrixHMD1[,2],log="y", type="b",ylim = c(1e-03,1e+07),xlab ="trajectory length 100(red); 170(green); 200(blue)", ylab="variance of mean estimate", col="red",pch=16)
 points(x,SubMatrixHMD2[,2], log="y",type="b", col="green", pch=16)
 points(x,SubMatrixHMD3[,2], log="y", type="b",col="blue", pch=16)
@@ -168,7 +168,7 @@ plot(x, SubMatrixHMD1mod[,1],log="y",ylim = c(1e-03,1e+03), type="b",xlab ="traj
 points(x,SubMatrixHMD2mod[,1], log="y",type="b", col="green", pch=16)
 points(x,SubMatrixHMD3mod[,1], log="y", type="b",col="blue", pch=16)
 
-## variance of variance estimate (NUTS & Independent)
+## variance of variance estimate
 plot(x, SubMatrixHMD1mod[,2],log="y",ylim = c(1e-03,1e+07), type="b",xlab ="trajectory length 100(red); 170(green); 200(blue)", ylab="variance of mean estimate", col="red",pch=16)
 points(x,SubMatrixHMD2mod[,2], log="y",type="b", col="green", pch=16)
 points(x,SubMatrixHMD3mod[,2], log="y", type="b",col="blue", pch=16)

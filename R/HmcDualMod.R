@@ -60,5 +60,24 @@ HmcDualMod <- function(theta0, delta, lambda, L, M, Madapt) {
     }
     #print(m)
   }
-  return(list(samples = outcome[(Madapt + 1):(M + Madapt),],alpha = alpha.vec))
+  HmcDMod <- list(samples = outcome[(Madapt + 1):(M + Madapt),],alpha = alpha.vec)
+  class(HmcDMod) <- "HmcDual"
+  return(HmcDMod)
+}
+
+print.HmcDual <- function(obj){
+  D <- length(obj[[1]][1,])
+  m <- length(obj[[1]][,1])
+  cat("Dimension of the parameter:", D, "\n")
+  cat("Sample size generated: M = ", m, "\n\n")
+  len <- min(m,8)
+  dots <- ifelse(m>8, "...","\n")
+  for (i in 1:D){
+    cat("theta",i,": ", format(round(obj[[1]][1:len], digits = 6), nsmall=6), dots, "\n")
+  }
+  cat("\n")
+  cat("Acceptance Rate: ", format(round(obj[[2]][2:(len+1)], digits = 6), nsmall=6), dots, "\n\n")
+
+  invisible(obj)
+
 }

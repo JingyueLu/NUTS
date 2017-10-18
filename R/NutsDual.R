@@ -296,11 +296,32 @@ NutsDual <- function(theta0, delta, L, M, Madapt){
     }
   #print(m)
   }
-  return(list(samples=out[(Madapt+1):(M+Madapt),], acceptrate= accproV[(Madapt+1): length(accproV)], epsilonNor = epsibarV/epsilon, Length=heightTV))
+
+  NutsResult <- list(samples=out[(Madapt+1):(M+Madapt),], acceptrate= accproV[(Madapt+1): length(accproV)], epsilonNor = epsibarV/epsilon, Length=heightTV)
+  class(NutsResult) <- "Nuts"
+  return(NutsResult)
 
 }
 
+print.Nuts <- function(obj){
+  D <- length(obj[[1]][1,])
+  m <- length(obj[[1]][,1])
+  cat("Dimension of the parameter:", D, "\n")
+  cat("Sample size generated: M = ", m, "\n\n")
+  len <- min(m,8)
+  dots <- ifelse(m>8, "...","\n")
+  for (i in 1:D){
+    cat("theta",i,": ", format(round(obj[[1]][(1:len),i], digits = 6), nsmall=6), dots, "\n")
+  }
+  cat("\n")
+  cat("Acceptance Rate: ", format(round(obj[[2]][1:len], digits = 6), nsmall=6), dots, "\n\n")
+  cat("Values of epsilon bar, normalised by the final value of epsilon bar: ", "\n")
+  cat(format(round(obj[[3]][1:len], digits = 6), nsmall=6), dots, "\n\n")
+  cat("Height of trajectory tree: ", obj[[4]][1:(len+6)], dots, "\n\n")
 
+  invisible(obj)
+
+}
 
 
 

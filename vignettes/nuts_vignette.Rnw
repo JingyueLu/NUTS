@@ -222,6 +222,7 @@ legend("topright",col = c(rgb(1,0,0,0.5),rgb(0,0,1,0.5),rgb(0,1,0,0.5)), pch = 1
 The histograms are substantially overlapping and they are consistent with the shape of the target distribution.
 
 \subsection{Evaluations: HMC}
+\label{evalHMC}
 In this section, we will use a 30-dimensional multivariate normal distribution. Since HMC is invariant to rotation and NUTS is simply an extension of HMC, the performance of each method will be the same for any 30-dimensional normal distribution, having the same squre roots of the eigenvalues of their covariance matrix. Hence, it is sufficient for us to consider a distribution with independent components. In this project, we follow the example provided by Radford Neal's blog \cite{blogpost}. Assume the target distribution is composed of 30 independent normal distributed variables $
 \theta_1,\theta_2, \dots, \theta_30$, with standard deviations of 110, 100, 26 equally spaced values between 16 and 8, 1.1, 1.0 respectively. For our experiment, we used a burnin period of 2000 iterations and sampled 12500 points afterwards.
 
@@ -279,8 +280,27 @@ sp
 
 
 <<DualAvDoubExp>>=
+load("~/Documents/NUTS/Performances.RData")
+finalplot.dualav <- as.data.frame(rbind(plotmatNUTS.doubexp$DualAvMatrix,plotmatHMC.doubexpSMALL$DualAvMatrix,plotmatHMC.doubexp$DualAvMatrix))[-c(151:310,551:630,711:790),]
+finalplot.ESS <- as.data.frame(rbind(plotmatNUTS.doubexp$EssMatrix,plotmatHMC.doubexpSMALL$EssMatrix,plotmatHMC.doubexp$EssMatrix))[-c(151:310,551:710),]
+
+
+
+library(ggplot2)
+sp <- ggplot(finalplot.dualav, aes(x=Delta, y=Discrepancy)) + ylim(-0.1,0.2) + geom_point(shape=1)
+sp <- sp + facet_grid( ~ Model)
+sp <- sp + stat_summary(fun.y=mean, colour="red", geom="line")
+sp <- sp + theme_bw()
+sp <- sp + ggtitle("Double Exponential") + theme(plot.title = element_text(hjust = 0.5))
+sp <- sp + labs(x = expression("Target acceptance rate statistics "*delta), y = expression("h - "*delta))
+sp
+@
+
+The analysis partly confirms the findings in the original paper. For small values of $\lambda$ in HMC, the average acceptance rate is close to the desired $\delta$ for all $\delta$ tested. When the trajectory length increases, the difference between the average acceptance rates in HMC and the specified $\delta$ increases as well. It is difficult to acheive the desired acceptance rate with relatetively large $\lambda$. For what concerns NUTS, the dual averaging performances are rather unsatisfactory. Instead of a line closing to 0, the line of difference fluctuates with majority points far from 0. In addition, we notice that the variance of the discrepancies are large for high value of $\lambda$, which might be caused by the fact that HMC is highly sensitive to the trajectory length.
+
+\par\citet{hoffman2011no} also computed the effective sample size (ESS) to show the effectiveness of NUTS. However, the formula for ESS reported in the paper has been shown to be incorrect because it does not take into account negative autocorrelations which in HMC are quite possible. For this reason we used a standard ESS function from the package "mcmcse".
+<<ESSNorm30>>=
 load("~/Documents/NUTS/Normal30_HMCDualMod.RData")
-finalplot.dualav <- as.data.frame(rbind(plotmatNUTS.norm30$DualAvMatrix,plotmatHMCDualMod.norm30$DualAvMatrix))
 finalplot.ESS <- as.data.frame(rbind(plotmatNUTS.norm30$EssMatrix,plotmatHMCDualMod.norm30$EssMatrix))
 
 library(ggplot2)
@@ -293,104 +313,52 @@ sp <- sp + labs(x = expression("Target acceptance rate statistics "*delta), y = 
 sp
 @
 
+<<ESSDoubExp>>=
+load("~/Documents/NUTS/Performances.RData")
+finalplot.ESS <- as.data.frame(rbind(plotmatNUTS.doubexp$EssMatrix,plotmatHMC.doubexpSMALL$EssMatrix,plotmatHMC.doubexp$EssMatrix))[-c(151:310,551:710),]
+
+library(ggplot2)
+spESS <- ggplot(finalplot.ESS, aes(x=Delta, y=ESS)) + ylim(0,2000) + geom_point(shape=1)
+spESS <- spESS + facet_grid( ~ Model)
+spESS <- spESS + stat_summary(fun.y=mean, colour="red", geom="line")
+spESS <- spESS + theme_bw()
+spESS <- spESS + ggtitle("Double Exponential") + theme(plot.title = element_text(hjust = 0.5))
+spESS <- spESS + labs(x = expression("Target acceptance rate statistics "*delta), y = "ESS")
+spESS
+@
+
+For what concerns the normal case, the ESS for HMC is extremely small for the first four trajectory length considered but an increasing trend of ESS can be observed when trajectory length increases. We expect high trajectory length would be a better option for the 30-dimensional normal distribution. The ESS for NUTS also shows a peculiar pattern with ESS number increases again after $\delta >0.8$. With these unexpected results, we propose further analysis to be made and more experiments with much larger trajectory lengths to be carried on.
+The double exponential scenario is instead close to our expectations. For HMC, our results confirmed the statement made by \cite{hoffman2011no} that HMC performs better at the optimal value $\delta=0.65$. Moreover, from the simple visualization of ESS, NUTS performed similar to HMC but not better. Still, further studies should be done.
+
+\par Finally, we conduct an investigation into the possible premature U-turn behaviour of NUTS. This defect of NUTS was first discovered and discussed in \citet{blogpost}. In plain words, premature U-turn happens when some directions are much more constrained with respect to some other directions. Therefore, the trajectory of intermediate constrained direction reverses long before the least constrained direction is fully explored, which means NUTS stop long before achieving the optimal trajectory length. To study this behaviour, we consider again the 30-dimensinal normal distribution used in section \ref{evalHMC}. Results are shown in the following plots. An independent sample using built in function rnorm is also included.
+
+<<Premature>>=
+load("~/Documents/NUTS/NormalTestData.RData")
+
+par(mfrow=c(2,2))
+# variance of mean estimate (NUTS & Independent)
+plot(x, SubMatrixNuts[,1],log="y", ylim = c(1e-03,1e+03), xlab ="NUTS(red) / Independent(black)", ylab="variance of mean estimate", col="red",pch=16,type="b")
+points(x,SubMatrixInd[,1], log="y", col="black", pch=16,type="b")
+## variance of mean estimate ()
+plot(x, SubMatrixHMD1mod[,1],log="y",ylim = c(1e-03,1e+03), type="b",xlab ="trajectory length 100(red); 170(green); 200(blue)", ylab="variance of mean estimate", col="red",pch=16)
+points(x,SubMatrixHMD2mod[,1], log="y",type="b", col="green", pch=16)
+points(x,SubMatrixHMD3mod[,1], log="y", type="b",col="blue", pch=16)
 
 
+# variance of variance estimate (NUTS & Independent)
+plot(x, SubMatrixNuts[,2], ylim = c(1e-03,1e+07),log="y", xlab ="NUTS(red) / Independent(black)", ylab="variance of variance estimate", col="red",pch=16, type="b")
+points(x,SubMatrixInd[,2], log="y", col="black", pch=16, type="b")
 
+## variance of variance estimate
+plot(x, SubMatrixHMD1mod[,2],log="y",ylim = c(1e-03,1e+07), type="b",xlab ="trajectory length 100(red); 170(green); 200(blue)", ylab="variance of mean estimate", col="red",pch=16)
+points(x,SubMatrixHMD2mod[,2], log="y",type="b", col="green", pch=16)
+points(x,SubMatrixHMD3mod[,2], log="y", type="b",col="blue", pch=16)
+@
+We see that the NUTS is not as efficient as HMC (by a factor of 2) in estimating variables with large standard deviation. On the contrary, NUTS outperforms HMC for variables with relatively small standard deviations. This inefficiency of NUTS in sampling variables of large standard deviation is consistent with the pre-mature U-turn behaviour suggested by \citet{blogpost}. The better performance of NUTS for variables with small standard deviations may be due to its automatic tuning procedure.
 
+\section{Conclusion}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- Based on the post by Radford Neal,
-#' Hamiltonian dynamics can be periodic for variables. It is possible for the period for a variabl to match its trajectory
-#' length, resulting the ending point close to the starting point. To address this issue, Neal proposes to randomly vary the
-#' trajectory length over some moderate range.
-
-
-
-
-
-% so that $h(\log(\epsilon))\equiv \mathbb{E}_t[\alpha_t|\log(\epsilon)]=\delta$.
-%
-%
-%
-% \begin{equation*}
-% h(x)=\mathbb{E}_t[H_t|x]=\lim_{T \rightarrow \infty}\frac{1}{T}\sum_{t=1}^{T}\mathbb{E}_t[H_t|x] = 0;
-% \end{equation*}
-% under some specific conditions $x$ can be tuned during the warmup phase to solve this limit and set it constant for the subsequent iterations.
-
-% \begin{equation}
-% x_{t+1}\leftarrow \mu - \frac{\sqrt{t}}{\gamma}\frac{1}{t+t_0}\sum_{t=1}^{T}H_i \quad \bar{x}_{t+1} \leftarrow \eta_t x_{t+1}+(1-\eta_t)\bar{x}_{t}
-% \label{updatedual}
-% \end{equation}
-
-% where the shrinkage of $x_t$ to a freely chosen point $\mu$ is controlled by a free nonnegative parameter $\gamma$, $t_0>0$ is used in order to stabilize the initial iterations and $\bar{x}_1=x_1$. The parameter $\eta_t \equiv t^{-\kappa}$ with $\kappa \in (0.5,1]$ is the step size schedule for which the conditions $\sum_t \eta_t=\infty$ and $\sum_t \eta^2_t < \infty$ (that ensures that $h(\bar{x}_t)$ converges to 0) are met.
-%The usual procedure is to tune $x$ during the warmup phase and set it constant for the subsequent iterations.
-% The benefits of the choices of the parameters $t_0$ and $\kappa$ are discussed in \citet{hoffman2011no}.
-
-% \par The same paper proposes a heuristic for choosing the initial value $\epsilon_1$ so that convergence is reached faster: $\epsilon$ is iteratively multiplied by $2^a$ with $a = \{-1,1\}$ until the acceptance probability of the leapfrog proposal crosses 0.5. Then, simply set $\mu=\log(10\epsilon_1)$ so that the algorithm is more inclined to test on values of $\epsilon>\epsilon_1$.
-% \par The tuning of $\epsilon$ for both HMC and NUTS is usually done so that the average Metropolis acceptance rate is equal to a prespecified $\delta \in (0,1)$: setting the statistic $H_t \equiv \delta - \alpha_t$ and the tunable parameter $x\equiv \log{\epsilon}$ in \eqref{updatedual}
-% , so that to obtain $h(\epsilon)\equiv \mathbb{E}_t[\alpha_t|\epsilon]=\delta$.
-% The only difference concerns the definition of $\alpha_t$, since in the NUTS algorithm there is an accept/reject step at each iteration: in this case, $\alpha_t$ is to be intended as the average probability that HMC would accept  the $(\theta,r)$ state in the last doubling step. In this case, for the NUTS algorithm the user must only provide the target mean acceptance rate $\delta$ and the number of iteration of the tuning phase.
-
-% % below is a code chunk. You don't have to give it a name, but if you do
-% % it MUST be unique.
-% <<chunkname>>=
-%
-% f = function(x) x^3 - x - 1
-%
-% @
-% You can do plots and they'll automatically be added to your document.
-% <<chunkname2>>=
-% plot(f, 1, 2)
-% @
-%
-% \section{A Bit About knitr}
-%
-% The code chunks you put in don't have to be displayed (and nor does the output),
-% if they are displayed they don't have to be evalutated.  To the next chunk I added
-% the option \verb|eval=FALSE|
-% <<chunk3, eval=FALSE>>=
-% rnorm(1e6)
-% @
-% This code is evaluated, I just choose not to display the output:
-% <<chunk4, results='hide'>>=
-% 5+5
-% @
-% And finally you might want your code to be evaluated but not displayed (useful for
-% changing options without displaying in your document):
-% <<chunk5, echo=FALSE>>=
-% options(width=100)
-% @
-%
-% \section{\LaTeX}
-%
-% \LaTeX itself is complicated if you've never used it before, but I'm sure you'll
-% pick it up quickly: there are a lot of guides on the web.  I recommend using the
-% \texttt{align} environment (in the \texttt{amsmath} package) for displayed equations:
-
-
-%\vspace{0.5in}
-%You can cite in two ways using the \texttt{natbib} package:
-%\citep{articlekey}
-%and
-%\citet{articlekey}.
+In this report, we have discussed some features about the No-U-Turn Sampler in comparison with standard and modified versions of HMC. In general, some of the results presented in \citet{hoffman2011no} are not confirmed by our analysis, especially for what concerns the claimed advantages of NUTS over the other HMC algorithms. We acknowledged the limits of our studies and some experiments results should be revised. The study is inconclusive regarding the effectiveness of NUTS. Further investigations should be carried out.
 
 % now generate the bibliography from file mybib.bib
 

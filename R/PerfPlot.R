@@ -30,9 +30,8 @@ PerfPlotHmc<-function(theta0, lambda, L, M = 2000, Madapt = 1000){
     EssMatrix$ESS[i] <- ess(samples)   ### replaced multiESS with ess
     print(round(100*i/dim(DualAvMatrix)[1],2))
   }
-
   DualAvMatrix$Model<-paste("HMC",round(DualAvMatrix$Model,3))
-  EssMatrix$Model<-paste("HMC",round(EssMatrix$Model,3))
+  ESSMatrix$Model<-paste("HMC",round(ESSMatrix$Model,3))
   return(list(DualAvMatrix = DualAvMatrix, EssMatrix = EssMatrix))
 }
 
@@ -156,7 +155,7 @@ lseq <- function(from=0.5, scale = 40, len = 9) {
 plotmatHMC<-PerfPlotHmc(theta0 = c(rnorm(1),rnorm(1,sd=2)), lambda=lseq(0.03318664)[c(1,3,5,7,9)], L = L, M = 2000, Madapt = 1000)
 plotmatNUTS<-PerfPlotNuts(theta0 = c(rnorm(1),rnorm(1,sd=2)), L = L, M = 2000, Madapt = 1000)
 finalplot.dualav <- as.data.frame(rbind(plotmatNUTS$DualAvMatrix,plotmatHMC$DualAvMatrix))
-finalplot.ESS <- as.data.frame(rbind(plotmatNUTS$EssMatrix,plotmatHMC$EssMatrix))
+finalplot.ESS <- as.data.frame(rbind(plotmatNUTS$ESSMatrix,plotmatHMC$ESSMatrix))
 
 
 
@@ -167,17 +166,18 @@ sp <- ggplot(finalplot.dualav, aes(x=Delta, y=Discrepancy)) + ylim(-0.1,0.2) + g
 sp <- sp + facet_grid( ~ Model)
 sp <- sp + stat_summary(fun.y=mean, colour="red", geom="line")
 sp <- sp + theme_bw()
-sp <- sp + ggtitle("30D Normal") + theme(plot.title = element_text(hjust = 0.5))
+sp <- sp + ggtitle("2D Normal") + theme(plot.title = element_text(hjust = 0.5))
 sp <- sp + labs(x = expression("Target acceptance rate statistics "*delta), y = expression("h - "*delta))
 sp
 
 ### Plot the discrepancies (not exactly) like in Figure 6 in Hoffman & Gelman (2014)
+
 
 library(ggplot2)
 spESS <- ggplot(finalplot.ESS, aes(x=Delta, y=ESS)) + ylim(0,2000) + geom_point(shape=1)
 spESS <- spESS + facet_grid( ~ Model)
 spESS <- spESS + stat_summary(fun.y=mean, colour="red", geom="line")
 spESS <- spESS + theme_bw()
-spESS <- spESS + ggtitle("30D Normal") + theme(plot.title = element_text(hjust = 0.5))
+spESS <- spESS + ggtitle("2D Normal") + theme(plot.title = element_text(hjust = 0.5))
 spESS <- spESS + labs(x = expression("Target acceptance rate statistics "*delta), y = "ESS")
 spESS

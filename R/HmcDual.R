@@ -99,5 +99,9 @@ HmcDual <- function(theta0, delta, lambda, L, M, Madapt) {
       epsilon <- epsilon.bar
     }
   }
-  return(list(samples = outcome[(Madapt + 1):(M + Madapt),],alpha = alpha.vec))
+  HmcDResult <- list(samples = outcome[(Madapt + 1):(M + Madapt),],alpha = alpha.vec)
+  class(HmcDResult) <- "HmcDual"
+  return(HmcDResult)
 }
+
+
