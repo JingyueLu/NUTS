@@ -128,6 +128,8 @@ FindReasonableEpsilon <- function(theta,log.start, L){
 ####################################################################################
 ####################################################################################
 
+#' HmcDual
+#'
 #' Hamiltonian Monte Carlo with Dual Averaging
 #'
 #' @param theta0 a p-dimensional vector with the initial value for each parameter.
@@ -139,7 +141,7 @@ FindReasonableEpsilon <- function(theta,log.start, L){
 #' @param M an integer specifying the number of iterations.
 #' @param Madapt an integer specifying the number of iterations of the warmup phase.
 #'
-#' @return This function returns a matrix which m-th row is a sample from the joint density.
+#' @return This function returns a matrix whose m-th row is a sample from the joint density.
 
 HmcDual <- function(theta0, delta, lambda, L, M, Madapt) {
   len <- length(theta0)
@@ -181,7 +183,6 @@ HmcDual <- function(theta0, delta, lambda, L, M, Madapt) {
     } else{
       epsilon <- epsilon.bar
     }
-    #print(m)
   }
   return(list(samples = outcome[(Madapt + 1):(M + Madapt),],alpha = alpha.vec))
 }
