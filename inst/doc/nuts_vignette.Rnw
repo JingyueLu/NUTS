@@ -6,15 +6,14 @@
 \usepackage[T1]{fontenc}
 \usepackage{algorithm}
 \usepackage{algorithmic}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
 
-% The line below tells R to use knitr on this.
-%\VignetteEngine{knitr::knitr}
 
 \title{The Hamiltonian Monte Carlo and the No-U-Turn Sampler}
 \author{Jingyue Lu \and Marco Palma}
 
 \begin{document}
-%\SweaveOpts{concordance=TRUE}
 
 \maketitle
 
@@ -39,7 +38,7 @@ The Hamiltonian Monte Carlo (also known as hybrid Monte Carlo, introduced by \ci
 % This is obtained by introducing for each model variable $\theta_d$ an auxiliary variable $r_d$ called momentum, whose distribution is easy to sample from (usually a standard normal distribution).
 The idea of HMC is to introduce a $d$-dimensional vector $r$ called momentum (where $d$ is the dimension of the parameter vector $\theta$), independently drawn from a distribution we can easily sample from (usually a standard multivariate normal). The unnormalized joint density can be written as
 $$ p(\theta,r) \propto \exp\left\{\mathcal{L}(\theta)-\frac{1}{2} r \cdot r\right\} $$
-where $\mathcal{L}$ is the unnormalized logarithm of the joint posterior density of $\theta$ and $\cdot$ is an inner product.
+where $\mathcal{L}$ is the unnormalized logarithm of the joint posterior density of $\{\theta_k\}$ and $(\cdot)$ is an inner product.
 
 \par Samples of $(\theta,r)$ are obtained by using the St{\"o}rmer-Verlet \textit{leapfrog integrator}. Given the gradient $\nabla_{\theta}\mathcal{L}$ and the step size $\epsilon$, the updates proceed as follows:
 \begin{equation*}
@@ -52,9 +51,9 @@ r^{t+\epsilon}=r^{t+\epsilon/2}+(\epsilon/2)\nabla_{\theta}\mathcal{L}(\theta^{t
 with a probability
 
 \begin{equation*}
-\alpha=\min\left\{1,\frac{p(\tilde{\theta},\tilde{r})}{p(\theta^{m-1},r_0)}\right\}
+\alpha=\min\left\{1,\frac{p(\tilde{\theta},\tilde{r})}{p(\theta^{m-1},r^{*})}\right\}
 \end{equation*}
-\noindent where $r_0$ is the resampled momentum at the $m$-th iteration.
+\noindent where $r^{*}$ is the resampled momentum at the $m$-th iteration.
 
 Despite the increase in efficiency, the usability and the performances of HMC are affected not only by the computation of $\nabla_{\theta}\mathcal{L}$ (that can be addressed via numerical procedures) but also by the step size $\epsilon$ and number of steps $L$ chosen within the leapfrog. Indeed, when $\epsilon$ is too large the acceptance rates will be low, whereas for small values of $\epsilon$ there will be a waste of computation because of the tiny steps. In terms of $L$, if it is too small the samples will be close to each other, but if it is too large the trajectory in the parameters space will loop back to the previous steps.
 
@@ -93,12 +92,11 @@ as a result of the prequiresites of the above procedure, we use the following co
 
 %We now consider the time reversibility requirement. Time reversibility is important as it ensures the algorithm converge to the correct distribution. NUTS uses a recursive algorithm to preserve time reversibility.
 
-\par For what concerns time reversibility, it is important as it ensures the algorithm converge to the target distribution. NUTS uses a recursive algorithm to preserve it. Recall that, to find a trajectory length for each NUTS interation, NUTS doubles the current trajectory repeatedly until an u-turn is encountered. To simulate forward and backward movement in time, during each doubling, NUTS allows the new subtrajectory to start from either the leftmost or rightmost point of the old trajectory and use leapfrog to trace a path either running backwards or forwards respectively. The proccess continues until stopping criteria are met. To illustrate, we assume the starting point is $(\theta_0^1,r)$, where the subscript is the number of step and the superscript is the index of the point in that step. Also, let $v\in\{1,-1\}$. $v$ is randomly choosen in each step to present the direction of movement. We are only interested in the path for $\theta$.
-
+ \par For what concerns time reversibility, it is important as it ensures the algorithm converge to the target distribution. NUTS uses a recursive algorithm to preserve it. Recall that, to find a trajectory length for each NUTS iteration, NUTS doubles the current trajectory repeatedly until an U-turn is encountered. % To simulate forward and backward movement in time, during each doubling, NUTS allows the new subtrajectory to start from either the leftmost or rightmost point of the old trajectory and use leapfrog to trace a path either running backwards or forwards respectively. The proccess continues until stopping criteria are met. To illustrate, we assume the starting point is $(\theta_0^1,r)$, where the subscript is the number of step and the superscript is the index of the point in that step. Also, let $v\in\{1,-1\}$. $v$ is randomly choosen in each step to present the direction of movement. We are only interested in the path for $\theta$.
 To simulate forward and backward movement in time, during each doubling, a new subtrajectory is traced by leapfrog either forward from the rightmost state or backward from the leftmost state until the stopping criteria are met. To illustrate, we assume the starting point is $(\theta_0^1,r)$, where the subscript is the number of doubling steps and the superscript is the index of the state in that doubling step. Also, let $v\in\{1,-1\}$ be randomly chosen in each doubling step to determine the direction of movement. We are interested in the path for $\theta$:\\
-\textbf{Step j=1:}   (v= 1)  $ \Rightarrow \theta_0^1 \rightarrow \theta_1^1.$ \\
-\textbf{Step j=2:}   (v= 1)  $ \Rightarrow \theta_0^1 \rightarrow \theta_1^1 \rightarrow \theta_2^1 \rightarrow \theta_2^2.$ \\
-\textbf{Step j=3:}   (v=-1)  $ \Rightarrow \theta_3^4\leftarrow\theta_3^3\leftarrow\theta_3^2\leftarrow \theta_3^1\leftarrow\theta_0^1 \rightarrow \theta_1^1 \rightarrow \theta_2^1 \rightarrow \theta_2^2.$ \\
+\textbf{Step j=1:}   (v= 1)  $ \Rightarrow \theta_0^1 \textcolor{red}{\rightarrow \theta_1^1}.$ \\
+\textbf{Step j=2:}   (v= 1)  $ \Rightarrow \theta_0^1 \rightarrow \theta_1^1 \textcolor{red}{\rightarrow \theta_2^1 \rightarrow \theta_2^2}.$ \\
+\textbf{Step j=3:}   (v=-1)  $ \Rightarrow \textcolor{red}{\theta_3^4\leftarrow\theta_3^3\leftarrow\theta_3^2\leftarrow \theta_3^1\leftarrow}\theta_0^1 \rightarrow \theta_1^1 \rightarrow \theta_2^1 \rightarrow \theta_2^2.$ \\
 \noindent In the example above, we build a three-step path. We can also think the path after each step $j$ as a binary tree of height $j$, so final path is a binary tree of height 3
 $$\underbrace{\underbrace{\underbrace{\theta_3^4\leftarrow\theta_3^3}_{\text{level }1}\leftarrow\underbrace{\theta_3^2\leftarrow \theta_3^1}_{\text{level }1}}_{\text{level }2}\leftarrow\underbrace{\underbrace{\theta_0^1 \rightarrow \theta_1^1}_{\text{level }1} \rightarrow \underbrace{\theta_2^1 \rightarrow \theta_2^2}_{\text{level }1}}_{\text{level }2}}_{\text{level }3}.$$
 
@@ -114,7 +112,7 @@ should be less than 0:
 %
 % \textbf{\eqref{cond2}:}
 % $$(\theta_{end}-\theta_{start})\cdot r < 0.$$
-This condition is checked for each subtree and also for the whole tree. %Other than the stopping condition for U-turn, NUTS also stops expanding $\mathcal{B}$ when any newly discovered states in the continuing process are likely to have near 0 probability to be in $\mathcal{C}$ . To formulate, NUTS develops the following condition based on \eqref{cond1}:
+The second equality is due to a property of Hamiltonian system in physics. This condition is checked for each subtree and also for the whole tree. %Other than the stopping condition for U-turn, NUTS also stops expanding $\mathcal{B}$ when any newly discovered states in the continuing process are likely to have near 0 probability to be in $\mathcal{C}$ . To formulate, NUTS develops the following condition based on \eqref{cond1}:
 In addition, NUTS also stops expanding $\mathcal{B}$ when any newly discovered states in the continuing process has extremely low probability to be in $\mathcal{C}$. To formulate, NUTS develops the following condition based on \eqref{cond1}:
 % \textbf{\eqref{cond3}:}
 % The algorithm stops when
@@ -171,84 +169,134 @@ In addition, NUTS also stops expanding $\mathcal{B}$ when any newly discovered s
 % 6. Sample $\tilde{\theta}$ uniformly from $\mathcal{C}$.
 
 \subsection{Efficient NUTS}
-\par \citet{hoffman2014nuts} proposed an efficient version of the NUTS algorithm. Firstly, the execution is halted exactly once a stopping criterion is met instead of at the end of the corresponding doubling step. Secondly, simplified NUTS requires to store $2^j$ states to perform uniform sampling at the end. A solution for reducing this memory requirement from $O(2^j)$ to $O(j)$ is to use a more sophisticated transition kernel and to exploit the binary tree structure of the trajectory path. We refer interested reader to \citet{hoffman2014nuts} for details. The NUTS function included in the package is an efficient algorithm with these improvements implemented.
+\par \citet{hoffman2011no} also proposed an efficient version of the NUTS algorithm. Firstly, the execution is halted exactly once a stopping criterion is met instead of at the end of the corresponding doubling step. Secondly, simplified NUTS requires to store $2^j$ states to perform uniform sampling at the end. A solution for reducing this memory requirement (from $O(2^j)$ to $O(j)$, see \citealp{hoffman2011no}) is to use a more sophisticated transition kernel and to exploit the binary tree structure of the trajectory path. We refer interested reader to \citet{"Nuts"hoffman2011no} for details. The NUTS function included in the package is an efficient algorithm with these improvements implemented.
 
-% Simplified NUTS algorithm need to evaluate log posterior probability and its gradient at $2^j-1$ points apart from $O(2^j)$ operations to check the stopping criteria \citep{hoffman2014nuts}. Furthermore, the final doubling iteration continues even when a stopping criterion is met in the middle of the process. In terms of memory, simplifed NUTS requires to store $2^j$ states to perform uniform sampling at the end. These facts seriously deterioate the efficiency of NUTS. The second issue can be easily solved by terminating the excucation of the recrusion once $s$ becomes $0$. \citet{hoffman2014nuts} prosposed a solution for reducing the meomery requirment from $O(2^j)$ to $O(j)$. The key idea of this memory reduction is to use a more sophisticated transition kernal and to exploit the binary tree structure of the trajectory path. We refer interested reader to \citet{hoffman2014nuts} for details. The NUTS function included in the package is an efficient algorithm with these improvements implemented.
+% Simplified NUTS algorithm need to evaluate log posterior probability and its gradient at $2^j-1$ points apart from $O(2^j)$ operations to check the stopping criteria \citep{hoffman2011no}. Furthermore, the final doubling iteration continues even when a stopping criterion is met in the middle of the process. In terms of memory, simplifed NUTS requires to store $2^j$ states to perform uniform sampling at the end. These facts seriously deterioate the efficiency of NUTS. The second issue can be easily solved by terminating the excucation of the recrusion once $s$ becomes $0$. \citet{hoffman2011no} prosposed a solution for reducing the meomery requirment from $O(2^j)$ to $O(j)$. The key idea of this memory reduction is to use a more sophisticated transition kernal and to exploit the binary tree structure of the trajectory path. We refer interested reader to \citet{hoffman2011no} for details. The NUTS function included in the package is an efficient algorithm with these improvements implemented.
 
 \section{Dual averaging}
 
-In \citet{hoffman2014nuts} a method based on the primal-dual algorithm by \citet{nesterov2009dual} is also provided for setting the step size $\epsilon$ for both HMC and NUTS.
+In \citet{hoffman2011no} a method based on the primal-dual algorithm by \citet{nesterov2009dual} is also provided for setting the step size $\epsilon$ for both HMC and NUTS.
 %, primarily intended for stochastic convex optimization.
 In the context of MCMC, considered the statistic $H_t=\delta-\alpha_t$ where $\delta$ is a specified average acceptance probability and $\alpha_t$ is the observed Metropolis one at time $t$. %Suppose that there is a tunable parameter $x \in \mathbb{R}$ for which the nonincreasing function
 The key idea of the dual averaging algorithm is that, under some specific conditions, $H_t=0$ can be approached (that is, to approximate the desired average acceptance probability) by tuning $\log(\epsilon)$ using an iterative procedure. In the implementation, $\epsilon$ is tuned during the warmup phase (the user needs to specify the number of iterations of the warmup phase) and kept constant for the subsequent iterations. The user needs to specify the target mean acceptance rate $\delta$ and the number of iterations of the warmup phase.
 
-\vspace{0.5in}
+\section{NUTS Package and evaluations}
 
-% so that $h(\log(\epsilon))\equiv \mathbb{E}_t[\alpha_t|\log(\epsilon)]=\delta$.
-%
-%
-%
-% \begin{equation*}
-% h(x)=\mathbb{E}_t[H_t|x]=\lim_{T \rightarrow \infty}\frac{1}{T}\sum_{t=1}^{T}\mathbb{E}_t[H_t|x] = 0;
-% \end{equation*}
-% under some specific conditions $x$ can be tuned during the warmup phase to solve this limit and set it constant for the subsequent iterations.
+We first introduce the NUTS Package and how we can use this package to generate samples from a posterior distribution, using HMC, modified versions of HMC and efficient NUTS. We will present results by sampling from a simple distribution, which is a 2-dimensional double exponential (Laplace) distribution with zero mean and unit scale parameter. The distiribution has the density
+$$f(x|\mu,b) = \frac{1}{2b}\exp(-\frac{|x-\mu|}{b}),$$
+with the parameter $\theta = (\mu, b) = (0,1)$. We ran HMC and NUTS for 5000 iterations (M=5000) after 2500 burn-in iterations (Madapt = 2500).
+<<chu,eval=FALSE>>=
+ L <- function(x) {
+   return(list(- sum(abs(x)), - sign(x)))
+ }
+ samples.hmc <- Hmc(theta0 = c(1,1), epsilon = 0.2, leap.nsteps = 10, L = L, M = 5000)
+ samples.hmcdual <- HmcDual(theta0=c(1,1), delta = 0.65, lambda = 1.5, L = L, M = 5000, Madapt = 2500)
+ samples.nuts <- NutsDual(theta0 = c(1,1), delta = 0.6, L = L, M = 5000, Madapt = 2500)
+@
+Depending on the method, each result is assigned with a class and its own print function. For example, for the samples generated by NUTS, we have
 
-% \begin{equation}
-% x_{t+1}\leftarrow \mu - \frac{\sqrt{t}}{\gamma}\frac{1}{t+t_0}\sum_{t=1}^{T}H_i \quad \bar{x}_{t+1} \leftarrow \eta_t x_{t+1}+(1-\eta_t)\bar{x}_{t}
-% \label{updatedual}
-% \end{equation}
+<<doublePrint>>=
+  load("/homes/palma/Documents/NUTS/data/SAMPLE.RData")
+   #load("https://github.com/jodie0399/NUTS/DoubExp.RData")
+  print(samples.nuts)
+@
+To view the outputs from these three methods, we can generate for example the histogram of the observed samples for $\theta_1$ in \ref{fig:hist}.
 
-% where the shrinkage of $x_t$ to a freely chosen point $\mu$ is controlled by a free nonnegative parameter $\gamma$, $t_0>0$ is used in order to stabilize the initial iterations and $\bar{x}_1=x_1$. The parameter $\eta_t \equiv t^{-\kappa}$ with $\kappa \in (0.5,1]$ is the step size schedule for which the conditions $\sum_t \eta_t=\infty$ and $\sum_t \eta^2_t < \infty$ (that ensures that $h(\bar{x}_t)$ converges to 0) are met.
-%The usual procedure is to tune $x$ during the warmup phase and set it constant for the subsequent iterations.
-% The benefits of the choices of the parameters $t_0$ and $\kappa$ are discussed in \citet{hoffman2014nuts}.
+\begin{figure}[hbtp]
+\center
+\includegraphics{/homes/palma/Documents/NUTS/histsamples_doubexp.png}
+\caption{Evaluation of the functions for the Double Exponential example}
+\label{fig:hist}
+\end{figure}
 
-% \par The same paper proposes a heuristic for choosing the initial value $\epsilon_1$ so that convergence is reached faster: $\epsilon$ is iteratively multiplied by $2^a$ with $a = \{-1,1\}$ until the acceptance probability of the leapfrog proposal crosses 0.5. Then, simply set $\mu=\log(10\epsilon_1)$ so that the algorithm is more inclined to test on values of $\epsilon>\epsilon_1$.
-% \par The tuning of $\epsilon$ for both HMC and NUTS is usually done so that the average Metropolis acceptance rate is equal to a prespecified $\delta \in (0,1)$: setting the statistic $H_t \equiv \delta - \alpha_t$ and the tunable parameter $x\equiv \log{\epsilon}$ in \eqref{updatedual}
-% , so that to obtain $h(\epsilon)\equiv \mathbb{E}_t[\alpha_t|\epsilon]=\delta$.
-% The only difference concerns the definition of $\alpha_t$, since in the NUTS algorithm there is an accept/reject step at each iteration: in this case, $\alpha_t$ is to be intended as the average probability that HMC would accept  the $(\theta,r)$ state in the last doubling step. In this case, for the NUTS algorithm the user must only provide the target mean acceptance rate $\delta$ and the number of iteration of the tuning phase.
+%<<doublePlotsaaa>>=
+%hist(samples.hmc[,1],freq=FALSE,breaks=50,col=rgb(1,0,0,0.5),ylim=c(0,0.5), xlab = "Sampled values",main = "Histograms of the first variable" )
+%hist(samples.hmcdual$samples[,1],freq=FALSE,breaks=50,add=T,col=rgb(0,0,1,0.5))
+%hist(samples.nuts$samples[,1],freq=FALSE,breaks=50,add=T,col=rgb(0,1,0,0.5))
+%x = seq(-5,5,len=100)
+%lines(x,0.5*dexp(abs(x)),col="black") #true density in black
+%library(rmutil)
+%lines(x,dlaplace(x),col="orange") #true density in black
+%box()
+%legend("topright",col = c(rgb(1,0,0,0.5),rgb(0,0,1,0.5),rgb(0,1,0,0.5)), pch = 18, legend = c("Hmc","HmcDual","NutsDual"))
+@
+The histograms are substantially overlapping and they are consistent with the shape of the target distribution.
 
-% % below is a code chunk. You don't have to give it a name, but if you do
-% % it MUST be unique.
-% <<chunkname>>=
-%
-% f = function(x) x^3 - x - 1
-%
-% @
-% You can do plots and they'll automatically be added to your document.
-% <<chunkname2>>=
-% plot(f, 1, 2)
-% @
-%
-% \section{A Bit About knitr}
-%
-% The code chunks you put in don't have to be displayed (and nor does the output),
-% if they are displayed they don't have to be evalutated.  To the next chunk I added
-% the option \verb|eval=FALSE|
-% <<chunk3, eval=FALSE>>=
-% rnorm(1e6)
-% @
-% This code is evaluated, I just choose not to display the output:
-% <<chunk4, results='hide'>>=
-% 5+5
-% @
-% And finally you might want your code to be evaluated but not displayed (useful for
-% changing options without displaying in your document):
-% <<chunk5, echo=FALSE>>=
-% options(width=100)
-% @
-%
-% \section{\LaTeX}
-%
-% \LaTeX itself is complicated if you've never used it before, but I'm sure you'll
-% pick it up quickly: there are a lot of guides on the web.  I recommend using the
-% \texttt{align} environment (in the \texttt{amsmath} package) for displayed equations:
+\subsection{Evaluations: HMC}
+\label{evalHMC}
+In this section, we will use a 30-dimensional multivariate normal distribution. Since HMC is invariant to rotation and NUTS is simply an extension of HMC, the performance of each method will be the same for any 30-dimensional normal distribution, having the same squre roots of the eigenvalues of their covariance matrix. Hence, it is sufficient for us to consider a distribution with independent components. In this project, we follow the example provided by Radford Neal's blog \cite{blogpost}. Assume the target distribution is composed of 30 independent normal distributed variables $
+\theta_1,\theta_2, \dots, \theta_30$, with standard deviations of 110, 100, 26 equally spaced values between 16 and 8, 1.1, 1.0 respectively. For our experiment, we used a burnin period of 2000 iterations and sampled 12500 points afterwards.
+
+To evaluate the performances of these methods, we divide the 12500 sample points into 20 batches with 625 observations in each batch. We are interested in the variance of the mean and variances estimates of these batches. In terms of HMC methods, different values for leapfrog steps (100, 170, 200) are used.
+
+The results for the standard HMC with dual averaging are reported in the following plots.
+\begin{figure}[hbtp]
+\center
+\includegraphics{/homes/palma/Documents/NUTS/PLOT2.png}
+\caption{Results for HMC with Dual Averaging}
+\label{fig:plot2}
+\end{figure}
+
+From the plot in \ref{fig:plot2}, we see that for any leapfrog step value, the variance of the mean estimates changes drastically for different variable $\theta$, ranging approximately from 0.01 to 100. This is rather unexpected. A similar evolution is observed for the variance of the variance estimates, although at a reduced scale. According to \citet{blogpost}, this type of behaviour is caused by the fact that Hamiltonian dynamics is periordic for each variable. If the length of the period is similar to the trajectory length, the ending point will be close to the starting point, leading to poor sample quality. A possible solution to this issue is to introduce randomness when deciding the number of leapfrog steps. In the following experiment, we implemented Neal's proposal and chose a number of leapfrog step randomly from the uniform distribution between 0.9 and 1.1 times the original number of leapfrog steps. The results are reported in \ref{fig:plot3}.
+
+\begin{figure}[hbtp]
+\center
+\includegraphics{/homes/palma/Documents/NUTS/PLOT3.png}
+\caption{Results for HMC with Dual Averaging with modified leapfrog number of steps}
+\label{fig:plot3}
+\end{figure}
+After the modification, the issue caused by the periodic behaviour of Hamiltonial dynamics is partially addressed. The variance of means still exhibit a fluatuting pattern but at a lower magnitude. For this reason, we employ the modified HMC for the following experiments.
+
+Another issue about HMC is that the performance of HMC is largely affected by the choice of the trajectory length $\lambda$, which we will discuss in detail when comparing it with NUTS.
+
+\subsection{Evaluations: HMC vs. NUTS}
+Evaluations of NUTS are conducted based on the approach proposed by \citet{hoffman2011no}. The first experiment is aimed at assessing whether the implementation of dual averaging is effective. The criterion used is the discrepancy between the desired average acceptance rate $\delta$ and the mean of the acceptance rate $\alpha$. For each targer distribution, we implemented NUTS and modified HMC with Dual Averaging to generate 2000 samples after a 1000 iteration burn-in period. The experiment is replicated for 15 values (NUTS) and 8 values (HMC) of $\delta$ equally spaced between 0.25 and 0.95. In terms of the trajectory length for HMC, we tried 4 different values, each of which is 1.5 times larger than the previous one. For each combination of $\delta$ and $\lambda$, 10 simulations with different random seeds have been produced. Assessments are done for both the double exponential distribution and the 30-dimensional normal distribution (introduced previously)
 
 
-%\vspace{0.5in}
-%You can cite in two ways using the \texttt{natbib} package:
-%\citep{articlekey}
-%and
-%\citet{articlekey}.
+\begin{figure}[hbtp]
+\center
+\includegraphics{/homes/palma/Documents/NUTS/DualAvPerf_30DimNormal.png}
+\caption{Evaluation of Dual Averaging performances for the normal case}
+\label{fig:dualavnorm}
+\end{figure}
+\begin{figure}[hbtp]
+\center
+\includegraphics{/homes/palma/Documents/NUTS/DualAv_doubexp.png}
+\caption{Evaluation of Dual Averaging performances for the double exponential case}
+\label{fig:dualavdoubexp}
+\end{figure}
+
+The results shown in \ref{fig:dualavdoubexp} and \ref{fig:dualavdoubexp} partly confirms the findings in the original paper. For small values of $\lambda$ in HMC, the average acceptance rate is close to the desired $\delta$ for all $\delta$ tested. When the trajectory length increases, the difference between the average acceptance rates in HMC and the specified $\delta$ increases as well. It is difficult to acheive the desired acceptance rate with relatetively large $\lambda$. For what concerns NUTS, the dual averaging performances are rather unsatisfactory. Instead of a line closing to 0, the line of difference fluctuates with majority points far from 0. In addition, we notice that the variance of the discrepancies are large for high value of $\lambda$, which might be caused by the fact that HMC is highly sensitive to the trajectory length.
+
+\par\citet{hoffman2011no} also computed the effective sample size (ESS) to show the effectiveness of NUTS. However, the formula for ESS reported in the paper has been shown to be incorrect because it does not take into account negative autocorrelations which in HMC are quite possible. For this reason we used a standard ESS function from the package "mcmcse".
+\begin{figure}[hbtp]
+\center
+\includegraphics{/homes/palma/Documents/NUTS/ESSPerf_30DimNormal.png}
+\caption{Evaluation of ESS performances for the normal case}
+\label{fig:essnorm}
+\end{figure}
+\begin{figure}[hbtp]
+\center
+\includegraphics{/homes/palma/Documents/NUTS/ESS_doubleexp.png}
+\caption{Evaluation of ESS performances for the double exponential case}
+\label{fig:essdoubexp}
+\end{figure}
+
+For what concerns the normal case, the ESS for HMC is extremely small for the first four trajectory length considered but an increasing trend of ESS can be observed when trajectory length increases. We expect high trajectory length would be a better option for the 30-dimensional normal distribution. The ESS for NUTS also shows a peculiar pattern with ESS number increases again after $\delta >0.8$. With these unexpected results, we propose further analysis to be made and more experiments with much larger trajectory lengths to be carried on.
+The double exponential scenario is instead close to our expectations. For HMC, our results confirmed the statement made by \cite{hoffman2011no} that HMC performs better at the optimal value $\delta=0.65$. Moreover, from the simple visualization of ESS, NUTS performed similar to HMC but not better. Still, further studies should be done.
+
+\par Finally, we conduct an investigation into the possible premature U-turn behaviour of NUTS. This defect of NUTS was first discovered and discussed in \citet{blogpost}. In plain words, premature U-turn happens when some directions are much more constrained with respect to some other directions. Therefore, the trajectory of intermediate constrained direction reverses long before the least constrained direction is fully explored, which means NUTS stop long before achieving the optimal trajectory length. To study this behaviour, we consider again the 30-dimensinal normal distribution used in section \ref{evalHMC}. Results are shown in the following plots. An independent sample using built in function rnorm is also included.
+\begin{figure}[hbtp]
+\center
+\includegraphics{/homes/palma/Documents/NUTS/PLOT4.png}
+\caption{NUTS vs. independent case}
+\label{fig:prem}
+\end{figure}
+We see from \ref{fig:prem} that the NUTS is not as efficient as HMC (by a factor of 2) in estimating variables with large standard deviation. On the contrary, NUTS outperforms HMC for variables with relatively small standard deviations. This inefficiency of NUTS in sampling variables of large standard deviation is consistent with the pre-mature U-turn behaviour suggested by \citet{blogpost}. The better performance of NUTS for variables with small standard deviations may be due to its automatic tuning procedure.
+
+\section{Conclusion}
+
+In this report, we have discussed some features about the No-U-Turn Sampler in comparison with standard and modified versions of HMC. In general, some of the results presented in \citet{hoffman2011no} are not confirmed by our analysis, especially for what concerns the claimed advantages of NUTS over the other HMC algorithms. We acknowledged the limits of our studies and some experiments results should be revised. The study is inconclusive regarding the effectiveness of NUTS. Further investigations should be carried out.
 
 % now generate the bibliography from file mybib.bib
 
