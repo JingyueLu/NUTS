@@ -261,7 +261,9 @@ Evaluations of NUTS are conducted based on the approach proposed by \citet{hoffm
 \end{figure}
 \begin{figure}[hbtp]
 \center
+
 \includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/DualAv_doubexp.png}
+
 \caption{Evaluation of Dual Averaging performances for the double exponential case}
 \label{fig:dualavdoubexp}
 \end{figure}
@@ -271,13 +273,17 @@ The results shown in \ref{fig:dualavdoubexp} and \ref{fig:dualavdoubexp} partly 
 \par\citet{hoffman2011no} also computed the effective sample size (ESS) to show the effectiveness of NUTS. However, the formula for ESS reported in the paper has been shown to be incorrect because it does not take into account negative autocorrelations which in HMC are quite possible. For this reason we used a standard ESS function from the package "mcmcse".
 \begin{figure}[hbtp]
 \center
+
 \includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/ESSPerf_30DimNormal.png}
+
 \caption{Evaluation of ESS performances for the normal case}
 \label{fig:essnorm}
 \end{figure}
 \begin{figure}[hbtp]
 \center
+
 \includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/Ess_doubleexp2.png}
+
 \caption{Evaluation of ESS performances for the double exponential case}
 \label{fig:essdoubexp}
 \end{figure}
@@ -288,7 +294,9 @@ The double exponential scenario is instead close to our expectations. For HMC, o
 \par Finally, we conduct an investigation into the possible premature U-turn behaviour of NUTS. This defect of NUTS was first discovered and discussed in \citet{blogpost}. In plain words, premature U-turn happens when some directions are much more constrained with respect to some other directions. Therefore, the trajectory of intermediate constrained direction reverses long before the least constrained direction is fully explored, which means NUTS stop long before achieving the optimal trajectory length. To study this behaviour, we consider again the 30-dimensinal normal distribution used in section \ref{evalHMC}. Results are shown in the following plots. An independent sample using built in function rnorm is also included.
 \begin{figure}[hbtp]
 \center
+
 \includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/PLOT4.png}
+
 \caption{NUTS vs. independent case}
 \label{fig:prem}
 \end{figure}
