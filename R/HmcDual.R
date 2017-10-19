@@ -2,7 +2,7 @@
 #'
 #' Heuristic for choosing an initial value of epsilon
 #'
-#' @param theta
+#' @param theta initial state
 #' @param log.start the log posterior value at initial state
 #' @param grad.start the gradient value at initial state
 #' @param L callable function needed in Leapfrog

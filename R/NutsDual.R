@@ -4,8 +4,8 @@
 #' @param l		the list on the left-hand side
 #' @param r 	the list on the right-hand side
 #'
-#' @example
-#' g(a,b) %=% list(c(3,5,6),4)
+#'
+#'
 #'
 '%=%' = function(l, r, ...) UseMethod('%=%')
 
@@ -57,7 +57,7 @@ g = function(...) {
 #'
 #' @return the list of updated theta, r and the log posterior value at the updated point
 #'
-#' @example
+#'
 
 Leapfrog <- function(theta, r, epsilon, L){
   g(trivial,grad.theta) %=% L(theta)
@@ -152,7 +152,7 @@ StopCon <-function(theta.minus, theta.plus, r.minus,r.plus){
 #'
 #' Heuristic for choosing an initial value of epsilon
 #'
-#' @param theta
+#' @param theta initial state
 #' @param log.start the log posterior value at initial state
 #' @param grad.start the gradient value at initial state
 #' @param L callable function needed in Leapfrog
