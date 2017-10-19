@@ -16,7 +16,6 @@
 ### code chunk number 2: doublePrint
 ###################################################
   load("/homes/palma/Documents/NUTS/data/SAMPLE.RData")
-   #load("https://github.com/jodie0399/NUTS/DoubExp.RData")
   print(samples.nuts)
 
 

@@ -169,7 +169,7 @@ In addition, NUTS also stops expanding $\mathcal{B}$ when any newly discovered s
 % 6. Sample $\tilde{\theta}$ uniformly from $\mathcal{C}$.
 
 \subsection{Efficient NUTS}
-\par \citet{hoffman2011no} also proposed an efficient version of the NUTS algorithm. Firstly, the execution is halted exactly once a stopping criterion is met instead of at the end of the corresponding doubling step. Secondly, simplified NUTS requires to store $2^j$ states to perform uniform sampling at the end. A solution for reducing this memory requirement (from $O(2^j)$ to $O(j)$, see \citealp{hoffman2011no}) is to use a more sophisticated transition kernel and to exploit the binary tree structure of the trajectory path. We refer interested reader to \citet{"Nuts"hoffman2011no} for details. The NUTS function included in the package is an efficient algorithm with these improvements implemented.
+\par \citet{hoffman2011no} also proposed an efficient version of the NUTS algorithm. Firstly, the execution is halted exactly once a stopping criterion is met instead of at the end of the corresponding doubling step. Secondly, simplified NUTS requires to store $2^j$ states to perform uniform sampling at the end. A solution for reducing this memory requirement (from $O(2^j)$ to $O(j)$, see \citealp{hoffman2011no}) is to use a more sophisticated transition kernel and to exploit the binary tree structure of the trajectory path. We refer interested reader to \citet{hoffman2011no} for details. The NUTS function included in the package is an efficient algorithm with these improvements implemented.
 
 % Simplified NUTS algorithm need to evaluate log posterior probability and its gradient at $2^j-1$ points apart from $O(2^j)$ operations to check the stopping criteria \citep{hoffman2011no}. Furthermore, the final doubling iteration continues even when a stopping criterion is met in the middle of the process. In terms of memory, simplifed NUTS requires to store $2^j$ states to perform uniform sampling at the end. These facts seriously deterioate the efficiency of NUTS. The second issue can be easily solved by terminating the excucation of the recrusion once $s$ becomes $0$. \citet{hoffman2011no} prosposed a solution for reducing the meomery requirment from $O(2^j)$ to $O(j)$. The key idea of this memory reduction is to use a more sophisticated transition kernal and to exploit the binary tree structure of the trajectory path. We refer interested reader to \citet{hoffman2011no} for details. The NUTS function included in the package is an efficient algorithm with these improvements implemented.
 
@@ -197,14 +197,13 @@ Depending on the method, each result is assigned with a class and its own print 
 
 <<doublePrint>>=
   load("/homes/palma/Documents/NUTS/data/SAMPLE.RData")
-   #load("https://github.com/jodie0399/NUTS/DoubExp.RData")
   print(samples.nuts)
 @
 To view the outputs from these three methods, we can generate for example the histogram of the observed samples for $\theta_1$ in \ref{fig:hist}.
 
 \begin{figure}[hbtp]
 \center
-\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/histsamples_doubexp.png}
+\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/plots/histsamples_doubexp.png}
 \caption{Evaluation of the functions for the Double Exponential example}
 \label{fig:hist}
 \end{figure}
@@ -232,7 +231,7 @@ To evaluate the performances of these methods, we divide the 12500 sample points
 The results for the standard HMC with dual averaging are reported in the following plots.
 \begin{figure}[hbtp]
 \center
-\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/PLOT2.png}
+\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/plots/PLOT2.png}
 \caption{Results for HMC with Dual Averaging}
 \label{fig:plot2}
 \end{figure}
@@ -241,7 +240,7 @@ From the plot in \ref{fig:plot2}, we see that for any leapfrog step value, the v
 
 \begin{figure}[hbtp]
 \center
-\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/PLOT3.png}
+\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/plots/PLOT3.png}
 \caption{Results for HMC with Dual Averaging with modified leapfrog number of steps}
 \label{fig:plot3}
 \end{figure}
@@ -255,14 +254,14 @@ Evaluations of NUTS are conducted based on the approach proposed by \citet{hoffm
 
 \begin{figure}[hbtp]
 \center
-\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/DualAvPerf_30DimNormal.png}
+\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/plots/DualAvPerf_30DimNormal.png}
 \caption{Evaluation of Dual Averaging performances for the normal case}
 \label{fig:dualavnorm}
 \end{figure}
 \begin{figure}[hbtp]
 \center
 
-\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/DualAv_doubexp.png}
+\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/plots/DualAv_doubexp.png}
 
 \caption{Evaluation of Dual Averaging performances for the double exponential case}
 \label{fig:dualavdoubexp}
@@ -274,7 +273,7 @@ The results shown in \ref{fig:dualavdoubexp} and \ref{fig:dualavdoubexp} partly 
 \begin{figure}[hbtp]
 \center
 
-\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/ESSPerf_30DimNormal.png}
+\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/plots/ESSPerf_30DimNormal.png}
 
 \caption{Evaluation of ESS performances for the normal case}
 \label{fig:essnorm}
@@ -282,7 +281,7 @@ The results shown in \ref{fig:dualavdoubexp} and \ref{fig:dualavdoubexp} partly 
 \begin{figure}[hbtp]
 \center
 
-\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/Ess_doubleexp2.png}
+\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/plots/Ess_doubleexp2.png}
 
 \caption{Evaluation of ESS performances for the double exponential case}
 \label{fig:essdoubexp}
@@ -295,7 +294,7 @@ The double exponential scenario is instead close to our expectations. For HMC, o
 \begin{figure}[hbtp]
 \center
 
-\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/PLOT4.png}
+\includegraphics[scale=0.7]{/homes/palma/Documents/NUTS/plots/PLOT4.png}
 
 \caption{NUTS vs. independent case}
 \label{fig:prem}
